@@ -31,7 +31,7 @@ function processLogin(ok) {
 	background(15);
 	socket.emit('getData', user.getGroupName());
 }
-
+p5.disableFriendlyErrors = true; // disables FES
 function setup() {
 	// console.log(frameRate());
 	frameRate(fr);
@@ -40,7 +40,7 @@ function setup() {
 
 	// console.log(frameRate());
 
-	socket = io.connect('http://46.101.126.212:3000/');
+	socket = io.connect('http://localhost:3000/');
 	// socket.on('mouse', newDrawing);
 	// socket.on('init', initDrawing);
 	socket.on('checkedLogin', processLogin);
@@ -64,18 +64,21 @@ function draw() {
 	// background(0);
 	playerPosition.x += velocity.x;
 	playerPosition.y += velocity.y;
+	if (velocity.x || velocity.y){
+		socket.emit('playerPosition', playerPosition);
+	}
 
-	socket.emit('playerPosition', playerPosition);
 	socket.on('receivePositions', function updatePlayers(data) {
 		// console.log("PONAL PRINAL");
 		if(data[0].name === user.getGroupName()) {
 			// console.log("ZROZUMILO");
 
-			background(0);
+			clear();
 			for(var i = 0; i < data.length; i++) {
 				// console.log(data[i].x + " " + data[i].y);
 				drawPlayer(data[i]);
 			}
+			delete data;
 		} else {
 			// console.log("DENIED");
 		}

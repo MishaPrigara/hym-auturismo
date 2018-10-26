@@ -40,20 +40,15 @@ function newConnection(socket) {
       }
 			users[socket.id] = user.groupName;
 			groupIds[user.groupName].push(socket);
+			playerPosition[socket.id] = {
+				x : 0,
+				y : 0
+			};
 		}
 		if(pass[user.groupName] === user.pass) {
       console.log("Somebody joined " + user.groupName + " maybe his name is " + socket.id);
     }
 		socket.emit('loggedIn', (pass[user.groupName] === user.pass));
-	}
-
-	socket.on('getData', sendData);
-
-	function sendData() {
-		if(!users[socket.id] || !saved[users[socket.id]])return;
-		// console.log("Tried to check but smth went wrong :-( " + saved[users[socket.id]].length);
-		// console.log(saved[users[socket.id]].length);
-		socket.emit('mouse', saved[users[socket.id]]);
 	}
 
 
@@ -76,11 +71,12 @@ function newConnection(socket) {
   socket.on('playerPosition', receivePostion);
 
   function receivePostion(curPlayerPosition) {
+    console.log("PRINAL");
     // console.log(curPlayerPosition.x + " " + curPlayerPosition.y + " received from " + socket.id);
     playerPosition[socket.id] = curPlayerPosition;
     var currentGroup = groupIds[users[socket.id]];
     var currentPlayersPositions = [];
-    if(!currentGroup)return;
+    if(!currentGroup || !currentGroup.length)return;
     for(var i = 0; i < currentGroup.length; i++) {
       var newData = {
         x : playerPosition[currentGroup[i].id].x,
@@ -88,10 +84,13 @@ function newConnection(socket) {
         name : users[currentGroup[i].id]
       };
       currentPlayersPositions.push(newData);
+      delete newDate;
     }
 
-    
+
     socket.emit('receivePositions', currentPlayersPositions);
+    delete currentGroup;
+    delete currentPlayersPositions;
   }
 
 
