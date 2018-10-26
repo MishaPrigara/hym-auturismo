@@ -1,0 +1,30 @@
+{
+  "name": "pingpong",
+  "version": "1.0.0",
+  "description": "multiplayer web-game",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MishaPrigara/PingPong.git"
+  },
+  "keywords": [
+    "sockets",
+    "p5.js",
+    "node",
+    "pingpong",
+    "game"
+  ],
+  "author": "MishaPrigara",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/MishaPrigara/PingPong/issues"
+  },
+  "homepage": "https://github.com/MishaPrigara/PingPong#readme",
+  "dependencies": {
+    "express": "^4.16.3"
+  }
+}
