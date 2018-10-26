@@ -76,8 +76,22 @@ function newConnection(socket) {
   socket.on('playerPosition', receivePostion);
 
   function receivePostion(curPlayerPosition) {
-    console.log(curPlayerPosition.x + " " + curPlayerPosition.y + " received from " + socket.id);
+    // console.log(curPlayerPosition.x + " " + curPlayerPosition.y + " received from " + socket.id);
     playerPosition[socket.id] = curPlayerPosition;
+    var currentGroup = groupIds[users[socket.id]];
+    var currentPlayersPositions = [];
+    if(!currentGroup)return;
+    for(var i = 0; i < currentGroup.length; i++) {
+      var newData = {
+        x : playerPosition[currentGroup[i].id].x,
+        y : playerPosition[currentGroup[i].id].y,
+        name : users[currentGroup[i].id]
+      };
+      currentPlayersPositions.push(newData);
+    }
+
+    
+    socket.emit('receivePositions', currentPlayersPositions);
   }
 
 
