@@ -27,6 +27,7 @@ function newConnection(socket) {
 	socket.on('checkLogin', checkLogin);
 
 	function checkLogin(user) {
+    console.log("Check login");
 		if(!groupIds[user.groupName] || !groupIds[user.groupName].length) {
 			groupIds[user.groupName] = [];
 			pass[user.groupName] = user.pass;
@@ -53,6 +54,7 @@ function newConnection(socket) {
 
 
 	socket.on('disconnect', function () {
+    console.log("disconnect check");
 		if(users[socket.id] !== null && groupIds[users[socket.id]]) {
 			console.log("Somebody left " + users[socket.id]);
 	    var index = groupIds[users[socket.id]].indexOf(socket);
@@ -68,13 +70,13 @@ function newConnection(socket) {
 		}
   });
 
-  socket.on('playerPosition', receivePostion);
+  socket.on('playerPosition', receivePosition);
 
-  function receivePostion(curPlayerPosition) {
-    console.log("PRINAL");
+  function receivePosition(curPlayerPosition) {
+    //console.log("PRINAL");
     // console.log(curPlayerPosition.x + " " + curPlayerPosition.y + " received from " + socket.id);
     playerPosition[socket.id] = curPlayerPosition;
-    var currentGroup = groupIds[users[socket.id]];
+  /*  var currentGroup = groupIds[users[socket.id]];
     var currentPlayersPositions = [];
     if(!currentGroup || !currentGroup.length)return;
     for(var i = 0; i < currentGroup.length; i++) {
@@ -85,12 +87,10 @@ function newConnection(socket) {
       };
       currentPlayersPositions.push(newData);
       delete newDate;
-    }
+    } */
 
-
-    socket.emit('receivePositions', currentPlayersPositions);
-    delete currentGroup;
-    delete currentPlayersPositions;
+    socket.emit('receivePositions', playerPosition[socket.id]);
+    return;
   }
 
 

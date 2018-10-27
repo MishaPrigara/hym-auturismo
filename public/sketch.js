@@ -5,15 +5,18 @@ var locked = false;
 var playerPosition = {};
 var velocity = {};
 var user = new User();
+var localGroupName;
 
 
 function keypressed() {
+	console.log("keyp");
 	if(event.key === 'Enter') {
 		login();
 	}
 }
 
 function login() {
+	console.log("log");
 	user.login();
 
 	var data = {
@@ -24,6 +27,7 @@ function login() {
 }
 
 function processLogin(ok) {
+	console.log("proc log");
 	if(!ok) {
 		location.reload();
 	}
@@ -33,6 +37,7 @@ function processLogin(ok) {
 }
 p5.disableFriendlyErrors = true; // disables FES
 function setup() {
+	console.log("setup");
 	// console.log(frameRate());
 	frameRate(fr);
 	createCanvas(windowWidth, windowHeight);
@@ -47,7 +52,9 @@ function setup() {
 	socket.on('loggedIn', function(data) {
 		user.setLogged(data);
 		processLogin(data);
+		localGroupName = user.getGroupName();
 	});
+
 	velocity = {
 		x : 0,
 		y : 0
@@ -59,30 +66,19 @@ function setup() {
 }
 
 function draw() {
-	if(!user.isLogged()) return;
 
 	// background(0);
 	playerPosition.x += velocity.x;
 	playerPosition.y += velocity.y;
 	if (velocity.x || velocity.y){
 		socket.emit('playerPosition', playerPosition);
+		//console.log("otp");
+		socket.on('receivePositions', drawPlayer);
+		//console.log("PONAL PRINAL");
+		clear();
+		//drawPlayer(playerPosition);
 	}
 
-	socket.on('receivePositions', function updatePlayers(data) {
-		// console.log("PONAL PRINAL");
-		if(data[0].name === user.getGroupName()) {
-			// console.log("ZROZUMILO");
-
-			clear();
-			for(var i = 0; i < data.length; i++) {
-				// console.log(data[i].x + " " + data[i].y);
-				drawPlayer(data[i]);
-			}
-			delete data;
-		} else {
-			// console.log("DENIED");
-		}
-	});
 }
 
 function drawPlayer(position) {
