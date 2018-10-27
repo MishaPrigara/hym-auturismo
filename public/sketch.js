@@ -7,6 +7,9 @@ var velocity = {};
 var user = new User();
 var center = { };
 var board;
+var storozh;
+var shadow;
+var storozh_it = 0;
 function keypressed() {
 	if(event.key === 'Enter') {
 		login();
@@ -31,7 +34,11 @@ function processLogin(ok) {
 	background(15);
 	socket.emit('getData', user.getGroupName());
 }
-
+function preload(){
+	storozh = [loadImage("assets/storozh1_LEFT.png"),  loadImage("assets/storozh1_DOWN.png"),
+						loadImage("assets/storozh1_RIGHT.png"), loadImage("assets/storozh1_UP.png")];
+	shadow = loadImage("assets/shadow.png");
+}
 function setup() {
 	// console.log(frameRate());
 	frameRate(fr);
@@ -40,8 +47,6 @@ function setup() {
 		x : windowWidth/2,
 		y: windowHeight/2
 	}
-	shadow = loadImage("assets/shadow.png");
-	storozh = loadImage("assets/storozh.png");
 	background(160, 169, 204);
 
 	// console.log(frameRate());
@@ -73,7 +78,8 @@ function setup() {
 	playerPosition = {
 		x : 1000,
 		y : 1000,
-		type: 0
+		type: 0,
+		id : 3
 	};
 
 
@@ -153,7 +159,9 @@ function initDraw(data){
 	for(var i = 0; i < data.length; i++) {
 		drawObj(data[i].type, data[i].y, data[i].x);
 	}
-	//image(shadow,center.x - center.y, 0 , center.y*2,center.y*2);
+	image(shadow,center.x - center.y, 0 , center.y*2,center.y*2);
+
+	//image(shadow,center.x,center.y);
 	fill(0,0,0);
 	rect(0,0,center.x-center.y,center.y*2);
 	rect(center.x-center.y+center.y*2,0,center.x-center.y,center.y*2);
@@ -161,21 +169,27 @@ function initDraw(data){
 function drawObj(type, i, j) {
 	// console.log("Maluem");
 	if (type==0) return;
-	noStroke();
 	var toAdd = {
 		x : center.x-playerPosition.x,
 		y : center.y-playerPosition.y
 	};
+	noStroke();
+	if(type == 4) {
 
-	if(type == 1) {
-		fill(255, 0, 0);
 	} else if(type == 2) {
 		fill(0, 255, 0);
 	} else if(type == 3) {
 		fill(0, 0, 255);
-	} else if (type == 4){
-		fill(0, 255, 255);
-		image(storozh,j+toAdd.x,i+toAdd.y,50,50);
+	} else if (type == 1){
+		if (playerPosition.type == 1) {
+			if(velocity.x < 0)playerPosition.id = 0;
+			else if(velocity.x > 0)playerPosition.id = 2;
+			else if(velocity.y > 0)playerPosition.id = 1;
+			else playerPosition.id = 3;
+			console.log("ya tak ho4u " + it);
+		}
+		image(storozh[playerPosition.id],j+toAdd.x-storozh[0].width / 2,i+toAdd.y - storozh[0].height / 2);
+
 		return;
 	} else if(type >= 5) {
 		fill(50, 50, 50);

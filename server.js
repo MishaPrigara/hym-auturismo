@@ -123,7 +123,8 @@ function newConnection(socket) {
         x : playerPosition[currentGroup[i].id].x,
         y : playerPosition[currentGroup[i].id].y,
         type : playerPosition[currentGroup[i].id].type,
-        name : users[currentGroup[i].id]
+        name : users[currentGroup[i].id],
+        id : playerPosition[currentGroup[i].id].id
       };
       currentPlayersPositions.push(newData);
     }
