@@ -49,6 +49,7 @@ function newConnection(socket) {
       console.log("Somebody joined " + user.groupName + " maybe his name is " + socket.id);
     }
 		socket.emit('loggedIn', (pass[user.groupName] === user.pass));
+
 	}
 
 	socket.on('getData', sendData);
@@ -137,5 +138,30 @@ function newConnection(socket) {
   //   console.log(timer);
   //   timer--;
   // }, 1000);
+socket.on('sendCnt',function(curPlayerPosition){
+    playerPosition[socket.id] = curPlayerPosition;
+    var currentGroup = groupIds[users[socket.id]];
+    var currentPlayersPositions = [];
+    if(!currentGroup || !currentGroup.length)return;
+    var perem=false;
+    for (var i=0; i< currentGroup.length; i++){
+      perem|=(playerPosition[currentGroup[i].id].type===4);
+    }
+    perem=!perem;
+    console.log(perem);
+    for(var i = 0; i < currentGroup.length; i++) {
+      var newData = {
+        x : playerPosition[currentGroup[i].id].x,
+        y : playerPosition[currentGroup[i].id].y,
+        type : playerPosition[currentGroup[i].id].type,
+        name : users[currentGroup[i].id],
+        dir : playerPosition[currentGroup[i].id].dir,
+        locked: perem
+      };
+      currentPlayersPositions.push(newData);
+    }
+    socket.emit('getCnt',currentPlayersPositions);
+});
+
 
 }

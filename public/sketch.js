@@ -1,7 +1,7 @@
 var socket;
 var r = 30;
 var fr = 30;
-var locked = false;
+var locked = true;
 var playerPosition = {};
 var velocity = {};
 var user = new User();
@@ -87,6 +87,7 @@ function setup() {
 		socket.emit('getGroupSize', key);
 	});
 
+
 	velocity = {
 		x : 0,
 		y : 0
@@ -95,13 +96,23 @@ function setup() {
 		x : 1000,
 		y : 1000,
 		type: 0,
-		dir : 3
+		dir : 3,
+		locked : true
 	};
 
 	background_song.play();
-	socket.on('receivePositions', initDraw)
-}
 
+	socket.on('receivePositions', initDraw);
+	socket.on('getCnt', cnt);
+
+}
+function cnt(data){
+	if (user.getGroupName()==data[0].name){
+		for (var i=0; i<data.length; i++){
+			playerPosition.locked=data[i].locked;
+		}
+	}
+}
 function sqr(x) {
 	return x * x;
 }
@@ -143,7 +154,11 @@ function isPlaying(audio) {
 }
 
 function draw() {
+
+		//console.log("DA1");
 	if(!user.isLogged()) return;
+
+	//	console.log("DA2");
 	if (playerPosition.type==0) return;
 	// background(0);
 	if(!isPlaying(background_song)) {
@@ -157,6 +172,12 @@ function draw() {
 		var c=board[i][2];
 		var d=board[i][3];
 
+		if(playerPosition.locked) {
+			//console.log("DA");
+			socket.emit('sendCnt',playerPosition);
+			socket.emit('playerPosition', playerPosition);
+			return;
+		}
 		if(intersect(playerPosition, velocity, a,b,c,d)) {
 			playerPosition.x -= velocity.x;
 			playerPosition.y -= velocity.y;
