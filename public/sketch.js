@@ -40,6 +40,8 @@ function setup() {
 		x : windowWidth/2,
 		y: windowHeight/2
 	}
+	shadow = loadImage("assets/shadow.png");
+	storozh = loadImage("assets/storozh.png");
 	background(160, 169, 204);
 
 	// console.log(frameRate());
@@ -116,7 +118,6 @@ function intersect(newPosition, velocity, a,b,c,d) {
 function draw() {
 	if(!user.isLogged()) return;
 	if (playerPosition.type==0) return;
-
 	// background(0);
 
 	for(var i = 0; i < board.length; i++) {
@@ -146,12 +147,16 @@ function initDraw(data){
 	if(user.getGroupName() != data[0].name)return;
 	clear();
 	for(var i = 0; i < board.length; i++) {
-		drawObj(4, i, i);
+		drawObj(5, i, i);
 
 	}
 	for(var i = 0; i < data.length; i++) {
 		drawObj(data[i].type, data[i].y, data[i].x);
 	}
+	//image(shadow,center.x - center.y, 0 , center.y*2,center.y*2);
+	fill(0,0,0);
+	rect(0,0,center.x-center.y,center.y*2);
+	rect(center.x-center.y+center.y*2,0,center.x-center.y,center.y*2);
 }
 function drawObj(type, i, j) {
 	// console.log("Maluem");
@@ -168,7 +173,11 @@ function drawObj(type, i, j) {
 		fill(0, 255, 0);
 	} else if(type == 3) {
 		fill(0, 0, 255);
-	} else if(type >= 4) {
+	} else if (type == 4){
+		fill(0, 255, 255);
+		image(storozh,j+toAdd.x,i+toAdd.y,50,50);
+		return;
+	} else if(type >= 5) {
 		fill(50, 50, 50);
 		rect(board[i][0] + toAdd.x, board[i][1] + toAdd.y, board[i][2], board[i][3]);
 
