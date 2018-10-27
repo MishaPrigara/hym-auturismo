@@ -6,7 +6,7 @@ var playerPosition = {};
 var velocity = {};
 var user = new User();
 var center = { };
-
+var board;
 function keypressed() {
 	if(event.key === 'Enter') {
 		login();
@@ -52,8 +52,10 @@ function setup() {
 
 	socket.on('receiveGroupSize', function (data){
 		console.log("SECOND " + data.key + " got " + data.size);
-		if (data.key === key)
+		if (data.key === key){
 			playerPosition.type = data.size;
+			board = data.lvl;
+		}
 	});
 	socket.on('checkedLogin', processLogin);
 	socket.on('loggedIn', function(data) {
@@ -61,62 +63,88 @@ function setup() {
 		processLogin(data);
 		socket.emit('getGroupSize', key);
 	});
+
 	velocity = {
 		x : 0,
 		y : 0
 	};
 	playerPosition = {
-		x : 0,
-		y : 0,
+		x : 1000,
+		y : 1000,
 		type: 0
 	};
 
 
 	socket.on('receivePositions', initDraw)
 }
-
+function check(p1,p2){
+	if (board[parseInt(p2.y/5)][parseInt(p2.x/5)]==0) {
+		board[parseInt(p1.y/5)][parseInt(p1.x/5)]=0;
+		console.log(p1.y/5+ " " +p1.x/5);
+		return 1;
+	}
+	console.log(p2.y/5+ " "+ p2.x/5);
+	return 0;
+}
 function draw() {
 	if(!user.isLogged()) return;
+	if (!playerPosition.type) return;
 
 	// background(0);
-	playerPosition.x += velocity.x;
-	playerPosition.y += velocity.y;
+	var newPos = playerPosition;
+	newPos.x +=velocity.x;
+	newPos.y +=velocity.y;
 
-	socket.emit('playerPosition', playerPosition);
+	if (check(playerPosition,newPos))
+	{
+		console.log("DA");
+		playerPosition=newPos;
+		socket.emit('playerPosition', playerPosition);
+	}
+	else {
+		console.log("NET");
+	}
+
+
 
 }
 function initDraw(data){
 	if (data[0].name == user.getGroupName()){
-
 		clear();
-		var toAdd = {
-			x : center.x-playerPosition.x,
-			y : center.y-playerPosition.y
-		};
 		for (var i=0; i<data.length; i++){
-			data[i].x+=toAdd.x;
-			data[i].y+=toAdd.y;
-			//console.log(data[i].x+ " " + data[i].y);
-			drawObj(data[i]);
+			console.log(data[i].y/5+ " " + data[i].x/5);
+			board[data[i].y/5][data[i].x/5]=data[i].type;
+		}
+		for (var i=Math.max(0,playerPosition.y/5 - 50) ; i<playerPosition.y/5 + 50; i++)
+		{
+			for (var j=Math.max(0,playerPosition.x/5 - 50); j<playerPosition.x/5 + 50; j++){
+				drawObj(board[i][j], i, j)
+			}
 		}
 
 	}
 }
-function drawObj(position) {
+function drawObj(type, i, j) {
 	// console.log("Maluem");
+	if (type==0) return;
 	noStroke();
-	if(position.type == 1) {
+	var toAdd = {
+		x : center.x-playerPosition.x,
+		y : center.y-playerPosition.y
+	};
+
+	if(type == 1) {
 		fill(255, 0, 0);
-	} else if(position.type == 2) {
+	} else if(type == 2) {
 		fill(0, 255, 0);
-	} else if(position.type == 3) {
+	} else if(type == 3) {
 		fill(0, 0, 255);
-	} else if(position.type == 4) {
+	} else if(type >= 4) {
 		fill(50, 50, 50);
-		rect(position.x, position.y, 50, 50);
+		rect(j*5 + toAdd.x, i*5 + toAdd.y, 50, 50);
 		return;
 	}
-  ellipse(position.x,position.y,50,50);
+  ellipse(j*5 + toAdd.x ,i*5 + toAdd.y,50,50);
 }
 
 function keyReleased() {

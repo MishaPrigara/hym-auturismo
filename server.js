@@ -81,9 +81,22 @@ function newConnection(socket) {
   socket.on('getGroupSize', function(key){
     var sz = 0;
     if(groupIds[users[socket.id]])sz = groupIds[users[socket.id]].length;
+  	var fs = require('fs');
+  	var contents = fs.readFileSync('public/assets/level1.txt', 'utf-8');
+  	var numbers = contents.split(' ');
+    console.log(numbers.length);
+    var id=0;
+    var arr = [];
+    for (var i=0; i<1000; i++){
+      arr[i] = [];
+      for (var j=0; j<1000; j++){
+        arr[i][j]=numbers[id++];
+      }
+    }
     var res = {
       size :sz,
-      key : key
+      key : key,
+      lvl : arr
     };
     socket.emit('receiveGroupSize', res);
   });
