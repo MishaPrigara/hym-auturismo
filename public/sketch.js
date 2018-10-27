@@ -35,6 +35,7 @@ function processLogin(ok) {
 	socket.emit('getData', user.getGroupName());
 }
 function preload(){
+	background_song = document.getElementById("background-music");
 	guy[0] = [];
 	guy[1] = [loadImage("assets/storozh1_LEFT.png"),  loadImage("assets/storozh1_DOWN.png"),
 						loadImage("assets/storozh1_RIGHT.png"), loadImage("assets/storozh1_UP.png")];
@@ -72,6 +73,10 @@ function setup() {
 		//console.log("SECOND " + data.key + " got " + data.size);
 		if (data.key === key){
 			playerPosition.type = data.size;
+			if (playerPosition.type === 1){
+				playerPosition.x=660;
+				playerPosition.y=4070;
+			}
 			board = data.lvl;
 		}
 	});
@@ -93,7 +98,7 @@ function setup() {
 		dir : 3
 	};
 
-
+	background_song.play();
 	socket.on('receivePositions', initDraw)
 }
 
@@ -133,10 +138,18 @@ function intersect(newPosition, velocity, a,b,c,d) {
 	return false;
 }
 
+function isPlaying(audio) {
+	return !audio.paused;
+}
+
 function draw() {
 	if(!user.isLogged()) return;
 	if (playerPosition.type==0) return;
 	// background(0);
+	if(!isPlaying(background_song)) {
+		background_song.currentTime = 0;
+		background_song.play();
+	}
 
 	for(var i = 0; i < board.length; i++) {
 		var a=board[i][0];

@@ -84,7 +84,7 @@ function newConnection(socket) {
   	var fs = require('fs');
   	var contents = fs.readFileSync('public/assets/figures.txt', 'utf-8');
   	var numbers = contents.split(' ');
-    console.log(numbers.length);
+    // console.log(numbers.length);
     var id=0;
     var arr = [];
     for (var i=0; i<78; i++){
@@ -95,7 +95,7 @@ function newConnection(socket) {
         st+=arr[i][j]+" ";
 
       }
-      console.log(st);
+      // console.log(st);
     }
     var res = {
       size :sz,

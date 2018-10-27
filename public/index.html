@@ -1,9 +1,13 @@
 <html>
 	<head>
+		<title>WANTED.</title>
 		<link rel="stylesheet" href="style.css">
+		<link rel="shortcut icon" href="assets/icon.ico"/>
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
 		<script src="registerStyle.js"></script>
 		<script src="libraries/p5.js"></script>
+		<script src="libraries/p5.dom.js"></script>
+    <script src="libraries/p5.sound.js"></script>
 		<script src="user.js"></script>
 		<script src="sketch.js"></script>
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.1/socket.io.js"></script>
@@ -13,7 +17,7 @@
 
 	</head>
 	<body scroll = "no" style = "overflow: hidden;margin: 0 auto;" onselectstart="return false" onmousedown="return false">
-		
+
 
 
         <div class="logo">
@@ -68,5 +72,9 @@
                 </div>
             </div>
         </lable>
+
+				<div>
+					<audio allow="autoplay" id="background-music" style="display:none;" src="assets/back.mp3"></audio>
+				</div>
 	</body>
 </html>
