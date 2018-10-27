@@ -62,7 +62,7 @@ function setup() {
 
 	// console.log(frameRate());
 
-	socket = io.connect('http://46.101.126.212:80/');
+	socket = io.connect('http://localhost:3000/');
 	// socket.on('mouse', newDrawing);
 	// socket.on('init', initDrawing);
 

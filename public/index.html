@@ -9,15 +9,17 @@
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.1/socket.io.js"></script>
 		<script src='http://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.2/jquery.min.js'></script>
 		<script src="registerStyle.js"></script>
-		
+
+
 	</head>
 	<body scroll = "no" style = "overflow: hidden;margin: 0 auto;" onselectstart="return false" onmousedown="return false">
-		<div style="margin:right; padding:50px; position: absolute; color:#9fa3a5;">
-			<h2 id="Size" ></h2>
-		</div>
+		
 
 
-
+        <div class="logo">
+            <img src="assets/logo.png" class="logo_img">
+        </div>
+        <input type="checkbox" id="check" class="rules_checkbox"/>
 		<div class="container" >
 			<div class="navigation">
 				<ol>
@@ -25,33 +27,46 @@
 					<li><a href="#"   data-ref="viewpswd">Password</a></li>
 				</ol>
 			</div>
-		<form id="sign-form" class="sign-form">
-		<ol class="questions">
-			<li>
-				<span><label for="name">Hi, Which Lobby do you want to join?</label></span>
-				<input class="active" id="name" name="name" type="text" placeholder="Enter lobby name" autofocus/>
-			</li>
-			<li>
-				<span><label for="password">Enter password</label></span>
-				<input id="viewpswd" name="password" type="text" placeholder="this your password"/>
-				<input onkeypress="keypressed()" id="password" name="password" type="password" placeholder="make sure it's ok" autofocus/>
-				<span id="show-pwd" class="view"></span>
-			</li>
-
-			<li>
-				<p style="margin-top: 45px;font-size: 32pt;float:right">
-					<a href="#" style="color:white;text-decoration:none" id="signup" onclick="login();">Enter</a>
-				</p>
-			</li>
-
-		</ol>
-		<div class="error-message"></div>
-
-		</form>
-
-		<h1 id="wf" style="opacity:0;width: 600px; margin-top:1.1em;display:none; margin-bottom:1em">Thank you</h1>
-
-
-
+            <form id="sign-form" class="sign-form">
+                    <ol class="questions">
+                    <li class="quest_item">
+                        <span><label for="name">Create new Lobby, or enter the Lobby name, that you want to join!</label></span>
+                        <input class="active" id="name" name="name" type="text" placeholder="Enter lobby name" autofocus/>
+                    </li>
+                    <li class="quest_item">
+                        <span><label for="password">Enter lobby password</label></span>
+                        <input id="viewpswd" name="password" type="text" placeholder="this your password"/>
+                        <input onkeypress="keypressed()" id="password" name="password" type="password" placeholder="Make sure it's ok" autofocus/>
+                        <span id="show-pwd" class="view"></span>
+                    </li>
+                    <li class="quest_item">
+                        <p style="margin-top: 45px;font-size: 32pt;float:right">
+                            <a href="#" style="text-align:center; color:white;text-decoration:none" id="signup" onclick="login();">Enter the Lobby</a>
+                        </p>
+                    </li>
+                </ol>
+                <div class="error-message"></div>
+            </form>
+            <h1 id="wf" style="opacity:0;width: 600px; margin-top:1.1em;display:none; margin-bottom:1em">Thank you</h1>
+        </div>
+        <label for="check" class="rules_lable">
+            <div class="rules_wrapper">
+                <div class="rules">
+                    <div class="rules_up">
+                        <img class="up" src="assets/up.png">
+                    </div>
+                    <h2 align="center" class = "rules_header">R U L E S</h2>
+                    <br></br>
+                    <p>You take part in this game in one of 2 teams.</p>
+                    <p>One of them is "storozh" : <img align="center" src="assets/2.png"></p>
+                    <p>His task is to kick "guys from 155"'s asses off:  <img align="center" src="assets/4.png"><img align="center" src="assets/1.png"><img align="center" src="assets/3.png">
+                    </p>
+                    <p>Their task is much simpler.</p>
+                    <p class="GL">Hide and run!</p>
+                    <h2>Good luck and have fun!</h3>
+                    <img align="center" class="team" src="assets/team.png">
+                </div>
+            </div>
+        </lable>
 	</body>
 </html>

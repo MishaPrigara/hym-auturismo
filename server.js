@@ -5,9 +5,9 @@ var users = {};
 var groupIds = {};
 var playerPosition = {};
 var app = express();
-var server = app.listen(80);
+var timer = 115;
+var server = app.listen(3000);
 var id = 0;
-
 // var SOCKETS = {};
 
 app.use(express.static('public'));
@@ -133,6 +133,9 @@ function newConnection(socket) {
     socket.emit('receivePositions', currentPlayersPositions);
   }
 
-
+  // var timerFun = setInterval(function() {
+  //   console.log(timer);
+  //   timer--;
+  // }, 1000);
 
 }

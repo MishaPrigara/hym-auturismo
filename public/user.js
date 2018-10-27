@@ -16,6 +16,11 @@ function User() {
 	this.deleteLogin = function() {
 		var elem = document.getElementsByClassName('container')[0];
     elem.parentNode.removeChild(elem);
+		elem = document.getElementsByClassName('logo')[0];
+		elem.parentNode.removeChild(elem);
+		elem = document.getElementsByClassName('rules_lable')[0];
+		elem.parentNode.removeChild(elem);
+		document.getElementsByTagName("body")[0].style = "background-color: #9fa3a5;";
 	}
 
 	this.getGroupName = function() {

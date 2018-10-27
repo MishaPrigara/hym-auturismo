@@ -7,20 +7,166 @@
 *:before {
   box-sizing: border-box;
 }
+@keyframes sliding{
+    0%{
+
+    }
+    100%{
+        margin-top: -35%;
+    }
+}
+@keyframes rotating{
+    from{
+        transform: rotate(0deg);
+    }
+    to{
+        transform: rotate(180deg);
+    }
+}
+@keyframes prozr{
+    from{
+        opacity:1;
+    }
+    to{
+        opacity:0;
+    }
+}
+@keyframes slidingR{
+    0%{
+        margin-top:-35%;
+    }
+    100%{
+        margin-top:0%;
+    }
+}
+@keyframes rotatingR{
+    from{
+        transform: rotate(180deg);
+    }
+    to{
+        transform: rotate(0deg);
+    }
+}
+@keyframes prozrR{
+    0%{
+        opacity:0;
+    }
+    100%{
+        opacity:1;
+    }
+}
+@font-face {
+    font-family: logo_ttf;
+    src: url(OCRAEXT.TTF);
+}
+label {
+    font-family: logo_ttf, "HelveticaNeue-Light", "Helvetica Neue Light", sans-serif;
+}
 body {
-  background: #A0A9CC;
+  background: #3a3a3a;
   color: #fff;
   font-size: 1.5em;
-  font-family: "HelveticaNeue-Light", "Helvetica Neue Light", sans-serif;
+  font-family: logo_ttf, "HelveticaNeue-Light", "Helvetica Neue Light", sans-serif;
   font-weight: 100;
   text-align: center;
 }
-.container {
-  background: #B7BED8;
-  color: #6A79A6;
+.quest_item:after{
+    content:"";
+    width:100%;
+    display:block;
+    clear:both;
+}
+.logo{
+    z-index: 9999;
+    margin-top: 5%;
+}
+.logo_img{
+    z-index: 9999;
+}
+.rules_wrapper{
+    width:100%;
+    transition-duration: 1s;
+}
+.rules_up{
+    display: inline-block;
+    margin:0 auto;
+    margin-top:4%;
+    width:100%;
+    text-align:center;
+}
+.up{
+    width:75px;
+    height:70px;
+}
+.rules_header{
+    margin-top:2%;
+    font-size:220%;
+}
+.rules{
+  background: #ffb100;
+  color: #fff;
   display: inline-block;
   padding: 0em 2em;
-  margin: 6em auto;
+  margin: 0 auto;
+  box-shadow: 0 50px 50px rgba(0, 0, 0, 0.2);
+  height: 100%;
+  text-align: left;
+  width: 600px;
+  z-index: 100;
+}
+.team{
+    margin-top:4%;
+    text-align:center;
+    width:500px;
+    opacity: 0.1;
+}
+.rules_wrapper:hover{
+    margin-top: -2%;
+}
+
+#check:checked ~ .rules_lable > .rules_wrapper > .rules > .rules_up{
+    animation: rotating 3s;
+    animation-fill-mode: both;
+}
+#check:checked ~ .rules_lable > .rules_wrapper > .rules{
+    animation: sliding 3s;
+    animation-fill-mode: both;
+}
+#check:checked ~ .container{
+    animation: prozr 1s;
+    animation-fill-mode: both;
+}
+
+
+
+#check:not(:checked)~ .rules_lable > .rules_wrapper > .rules > .rules_up{
+    animation: rotatingR 3s;
+}
+#check:not(:checked)~ .rules_lable > .rules_wrapper > .rules{
+    animation: slidingR 2s;
+    animation-fill-mode: forwards;
+}
+#check:not(:checked)~ .container{
+    opacity:0;
+    animation: prozrR 1.5s;
+    animation-fill-mode: forwards;
+    animation-delay: 1s;
+}
+
+.GL{
+    font-size: 150%;
+    color: #c11414;
+}
+
+.rules_checkbox{
+    display: none;
+}
+.container {
+  background: #ffb100;
+  color: #fff;
+  display: inline-block;
+  padding: 0em 2em;
+  margin: 3em auto;
   box-shadow: 0 50px 50px rgba(0, 0, 0, 0.2);
 }
 .container .navigation {
@@ -28,7 +174,7 @@ body {
 }
 .container .navigation ol {
   list-style: none;
-  background: #B7BED8;
+  background: #ffb100;
   position: absolute;
   padding: 30px 0;
   width: 600px;
@@ -57,11 +203,13 @@ body {
   opacity: 1;
 }
 .container .sign-form {
+  font-family: logo_ttf, "HelveticaNeue-Light", "Helvetica Neue Light", sans-serif;
   width: 600px;
   text-align: left;
   margin: 85px 0 0 0;
 }
 .container .sign-form #next-page {
+  font-family: logo_ttf, "HelveticaNeue-Light", "Helvetica Neue Light", sans-serif;
   opacity: 0;
   width: 40px;
   height: 40px;
@@ -72,27 +220,32 @@ body {
   background-size: contain;
 }
 .container .sign-form #next-page:hover {
+  font-family: logo_ttf, "HelveticaNeue-Light", "Helvetica Neue Light", sans-serif;
   background: url("https://jdniki.github.io/signup/images/next-pagehover.svg");
   background-size: contain;
 }
 .container .sign-form .questions {
+  font-family: logo_ttf, "HelveticaNeue-Light", "Helvetica Neue Light", sans-serif;
   list-style: none;
   -webkit-transition: height 0.4s;
   transition: height 0.4s;
   width: 88%;
   display: inline-block;
-  height: 80px;
+  height: 100px;
 }
 .container .sign-form .questions li {
+  font-family: logo_ttf, "HelveticaNeue-Light", "Helvetica Neue Light", sans-serif;
   position: absolute;
   width: 500px;
   /*-------------Password ------------------*/
 }
 .container .sign-form .questions li span {
+  font-family: logo_ttf, "HelveticaNeue-Light", "Helvetica Neue Light", sans-serif;
   display: block;
   margin-bottom: 10px;
 }
 .container .sign-form .questions li input {
+  font-family: logo_ttf, "HelveticaNeue-Light", "Helvetica Neue Light", sans-serif;
   width: 100%;
   font-size: .9em;
   color: #f2f2f2;
@@ -104,18 +257,22 @@ body {
   transition: all 0.5s ease;
 }
 .container .sign-form .questions li input:focus {
+  font-family: logo_ttf, "HelveticaNeue-Light", "Helvetica Neue Light", sans-serif;
   outline: none;
   border-bottom: 3px solid #6A79A6;
 }
 .container .sign-form .questions li:not(:first-child) {
+  font-family: logo_ttf, "HelveticaNeue-Light", "Helvetica Neue Light", sans-serif;
   opacity: 0;
   margin-top: 150px;
 }
 .container .sign-form .questions li #viewpswd {
+  font-family: logo_ttf, "HelveticaNeue-Light", "Helvetica Neue Light", sans-serif;
   position: absolute;
   opacity: 0;
 }
 .container .sign-form .questions li #show-pwd {
+  font-family: logo_ttf, "HelveticaNeue-Light", "Helvetica Neue Light", sans-serif;
   margin: -2.75em 0em;
   width: 40px;
   height: 40px;
@@ -125,19 +282,23 @@ body {
   cursor: pointer;
 }
 .container .sign-form .questions li #show-pwd.view {
+  font-family: logo_ttf, "HelveticaNeue-Light", "Helvetica Neue Light", sans-serif;
   background: url("https://jdniki.github.io/signup/images/view.svg");
   background-size: contain;
 }
 .container .sign-form .questions li #show-pwd.hide {
+  font-family: logo_ttf, "HelveticaNeue-Light", "Helvetica Neue Light", sans-serif;
   background: url("https://jdniki.github.io/signup/images/hide.svg");
   background-size: contain;
 }
 .container .sign-form .questions li #show-pwd:active,
 .container .sign-form .questions li #show-pwd:focus {
+  font-family: logo_ttf, "HelveticaNeue-Light", "Helvetica Neue Light", sans-serif;
   background: url("https://jdniki.github.io/signup/images/hide.svg");
   background-size: contain;
 }
 .container .sign-form .questions li select.country {
+  font-family: logo_ttf, "HelveticaNeue-Light", "Helvetica Neue Light", sans-serif;
   position: absolute;
   width: 4.5em;
   font-size: 0.7em;
@@ -151,6 +312,7 @@ body {
   border: none;
 }
 .container .sign-form .questions li #phone {
+  font-family: logo_ttf, "HelveticaNeue-Light", "Helvetica Neue Light", sans-serif;
   padding-left: 5em;
 }
 .container .error-message {
@@ -158,7 +320,7 @@ body {
   font-size: 14px;
   margin-top: 10px;
   padding-bottom: 30px;
-  background: #B7BED8;
+  background: #ffb100;
 }
 ::-webkit-input-placeholder {
   font-size: 0.9em;
