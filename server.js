@@ -7,8 +7,10 @@ var time = {};
 var timerId = {};
 var playerPosition = {};
 var app = express();
+var died = {};
 var timer = 115;
-var server = app.listen(80);
+var cnt = {};
+var server = app.listen(3000);
 var id = 0;
 // var SOCKETS = {};
 
@@ -145,13 +147,17 @@ socket.on('sendCnt',function(curPlayerPosition){
     var currentGroup = groupIds[users[socket.id]];
     var currentPlayersPositions = [];
     if(!currentGroup || !currentGroup.length)return;
-    var perem=false;
+    var is4=false;
+    var final=false;
     for (var i=0; i< currentGroup.length; i++){
-      perem|=(playerPosition[currentGroup[i].id].type===4);
+      is4|=(playerPosition[currentGroup[i].id].type===4);
+      final|=(playerPosition[currentGroup[i].id].locked===-1);
     }
-    perem=!perem;
     // console.log(perem);
     for(var i = 0; i < currentGroup.length; i++) {
+      var perem=1;
+      if (final) perem=-1;
+      else if (is4) perem=0;
       var newData = {
         x : playerPosition[currentGroup[i].id].x,
         y : playerPosition[currentGroup[i].id].y,
@@ -165,20 +171,50 @@ socket.on('sendCnt',function(curPlayerPosition){
     socket.emit('getCnt',currentPlayersPositions);
 });
 
-socket.on('startTimer', function (data) {
-  time[data] = 180;
-  timerId[data] = setInterval(function () {
-    // console.log(data);
-    // console.log("prev " + time[data]);
-    time[data] = Math.max(0, time[data] - 1);
+socket.on('died', function(data) {
 
-    // console.log("after " + time[data]);
+
+  if(!died[data.name]) {
+    died[data.name] = 1;
+  } else {
+    died[data.name]++;
+  }
+  if(died[data.name] == 3) {
+    time[data.name] = 0;
+  }
+  var newData = {
+      name: data.name,
+      time: 0
+  };
+  socket.emit('updateTime', newData);
+});
+
+socket.on('startTimer', function (data) {
+  time[data.name] = 180;
+
+  if(!cnt[data.name]) {
+    cnt[data.name] = [0, 0, 0, 0, 0];
+  }
+  timerId[data.name] = setInterval(function () {
+    cnt[data.name][data.type] = 1;
+    var sum = 1;
+    for(var i = data.type - 1; i >= 1; i--) {
+      if(cnt[data.name][i] > 0) {
+        sum = 0;
+        console.log("found " + i);
+      }
+    }
+    console.log(sum);
+    console.log("prev " + time[data.name]);
+    time[data.name] = Math.max(0, time[data.name] - sum);
+
+    console.log("after " + time[data.name]);
     var newData = {
-      name : data,
-      time : time[data]
+      name : data.name,
+      time : time[data.name]
     };
     socket.emit('updateTime', newData);
-  }, 1500);
+  }, 1000);
 });
 
 

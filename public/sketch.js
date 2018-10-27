@@ -13,6 +13,7 @@ var guy = [];
 var shadow;
 var storozh_it = 0;
 var font, fontsize = 40;
+var timeEnd = false;
 var waitForOthers = "Wait for other players to join";
 function keypressed() {
 	if(event.key === 'Enter') {
@@ -72,7 +73,7 @@ function setup() {
 
 	// console.log(frameRate());
 
-	socket = io.connect('http://46.101.126.212:80/');
+	socket = io.connect('http://localhost:3000/');
 	// socket.on('mouse', newDrawing);
 	// socket.on('init', initDrawing);
 
@@ -108,7 +109,8 @@ function setup() {
 		y : 1000,
 		type: 0,
 		dir : 3,
-		locked : true
+		locked : 1,
+		name : user.getGroupName()
 	};
 
 	background_song.play();
@@ -119,6 +121,10 @@ function setup() {
 		console.log("received" + data.name + " " + data.time);
 		if(user.getGroupName() === data.name) {
 			timer = data.time;
+			if(timer == 0) {
+				playerPosition.locked = -1;
+				timeEnd = true;
+			}
 		}
 	});
 
@@ -130,8 +136,11 @@ function cnt(data){
 			playerPosition.locked=data[i].locked;
 		}
 		if(was != playerPosition.locked) {
-
-			socket.emit('startTimer', user.getGroupName());
+			var newData = {
+				name : user.getGroupName(),
+				type : playerPosition.type
+			};
+			socket.emit('startTimer', newData);
 		}
 
 	}
@@ -179,10 +188,12 @@ function isPlaying(audio) {
 function draw() {
 
 		//console.log("DA1");
-	if(!user.isLogged()) return;
+	if(!user.isLogged() || timeEnd) return;
 
 	textAlign(CENTER);
-	if(!playerPosition.locked) {
+	if(playerPosition.locked == -1) {
+		drawWords("GAME OVER", width * .5);
+	} else if(!playerPosition.locked) {
 	  drawWords("" + timer, width * .5 );
 	} else {
 		drawWords(waitForOthers, width * .5);
@@ -251,6 +262,7 @@ function initDraw(data){
 			&& distance(playerPosition.x, playerPosition.y, data[it].x, data[it].y) < 50) {
 				playerPosition.type = -1;
 				data[guy_it].type = -1;
+				socket.emit('died', playerPosition);
 			}
 
 	for(var i = 0; i < data.length; i++) {
