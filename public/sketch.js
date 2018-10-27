@@ -7,9 +7,13 @@ var velocity = {};
 var user = new User();
 var center = { };
 var board;
+var timer = 180;
+var timeId;
 var guy = [];
 var shadow;
 var storozh_it = 0;
+var font, fontsize = 40;
+var waitForOthers = "Wait for other players to join";
 function keypressed() {
 	if(event.key === 'Enter') {
 		login();
@@ -35,6 +39,7 @@ function processLogin(ok) {
 	socket.emit('getData', user.getGroupName());
 }
 function preload(){
+	font = loadFont('assets/OCRAEXT.ttf');
 	background_song = document.getElementById("background-music");
 	guy[0] = [];
 	guy[1] = [loadImage("assets/storozh1_LEFT.png"),  loadImage("assets/storozh1_DOWN.png"),
@@ -53,6 +58,10 @@ function preload(){
 }
 function setup() {
 	// console.log(frameRate());
+
+	textFont(font);
+  textSize(fontsize);
+  textAlign(CENTER, CENTER);
 	frameRate(fr);
 	createCanvas(windowWidth, windowHeight);
 	center = {
@@ -63,11 +72,13 @@ function setup() {
 
 	// console.log(frameRate());
 
-	socket = io.connect('http://localhost:3000/');
+	socket = io.connect('http://46.101.126.212:80/');
 	// socket.on('mouse', newDrawing);
 	// socket.on('init', initDrawing);
 
 	var key=Math.random();
+
+
 
 	socket.on('receiveGroupSize', function (data){
 		//console.log("SECOND " + data.key + " got " + data.size);
@@ -104,13 +115,25 @@ function setup() {
 
 	socket.on('receivePositions', initDraw);
 	socket.on('getCnt', cnt);
+	socket.on('updateTime', function (data) {
+		console.log("received" + data.name + " " + data.time);
+		if(user.getGroupName() === data.name) {
+			timer = data.time;
+		}
+	});
 
 }
 function cnt(data){
 	if (user.getGroupName()==data[0].name){
+		var was = playerPosition.locked;
 		for (var i=0; i<data.length; i++){
 			playerPosition.locked=data[i].locked;
 		}
+		if(was != playerPosition.locked) {
+
+			socket.emit('startTimer', user.getGroupName());
+		}
+
 	}
 }
 function sqr(x) {
@@ -158,6 +181,12 @@ function draw() {
 		//console.log("DA1");
 	if(!user.isLogged()) return;
 
+	textAlign(CENTER);
+	if(!playerPosition.locked) {
+	  drawWords("" + timer, width * .5 );
+	} else {
+		drawWords(waitForOthers, width * .5);
+	}
 	//	console.log("DA2");
 	if (playerPosition.type==0) return;
 	// background(0);
@@ -195,6 +224,16 @@ function draw() {
 
 
 }
+
+function drawWords(words, x) {
+  // The text() function needs three parameters:
+  // the text to draw, the horizontal position,
+  // and the vertical position
+  if(playerPosition.type == 1)fill(0); else fill(255);
+  text(words, x, 80);
+
+}
+
 function initDraw(data){
 	if(user.getGroupName() != data[0].name)return;
 	clear();

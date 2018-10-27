@@ -3,10 +3,12 @@ var saved = {};
 var pass = {};
 var users = {};
 var groupIds = {};
+var time = {};
+var timerId = {};
 var playerPosition = {};
 var app = express();
 var timer = 115;
-var server = app.listen(3000);
+var server = app.listen(80);
 var id = 0;
 // var SOCKETS = {};
 
@@ -148,7 +150,7 @@ socket.on('sendCnt',function(curPlayerPosition){
       perem|=(playerPosition[currentGroup[i].id].type===4);
     }
     perem=!perem;
-    console.log(perem);
+    // console.log(perem);
     for(var i = 0; i < currentGroup.length; i++) {
       var newData = {
         x : playerPosition[currentGroup[i].id].x,
@@ -161,6 +163,22 @@ socket.on('sendCnt',function(curPlayerPosition){
       currentPlayersPositions.push(newData);
     }
     socket.emit('getCnt',currentPlayersPositions);
+});
+
+socket.on('startTimer', function (data) {
+  time[data] = 180;
+  timerId[data] = setInterval(function () {
+    // console.log(data);
+    // console.log("prev " + time[data]);
+    time[data] = Math.max(0, time[data] - 1);
+
+    // console.log("after " + time[data]);
+    var newData = {
+      name : data,
+      time : time[data]
+    };
+    socket.emit('updateTime', newData);
+  }, 1500);
 });
 
 
