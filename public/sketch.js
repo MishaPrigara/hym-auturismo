@@ -51,7 +51,7 @@ function setup() {
 	var key=Math.random();
 
 	socket.on('receiveGroupSize', function (data){
-		console.log("SECOND " + data.key + " got " + data.size);
+		//console.log("SECOND " + data.key + " got " + data.size);
 		if (data.key === key){
 			playerPosition.type = data.size;
 			board = data.lvl;
@@ -77,51 +77,80 @@ function setup() {
 
 	socket.on('receivePositions', initDraw)
 }
-function check(p1,p2){
-	if (board[parseInt(p2.y/5)][parseInt(p2.x/5)]==0) {
-		board[parseInt(p1.y/5)][parseInt(p1.x/5)]=0;
-		console.log(p1.y/5+ " " +p1.x/5);
-		return 1;
-	}
-	console.log(p2.y/5+ " "+ p2.x/5);
-	return 0;
+
+function sqr(x) {
+	return x * x;
 }
+
+function distance(x, y, a, b) {
+	return Math.sqrt(sqr(x - a) + sqr(y - b));
+}
+
+function intersect(newPosition, velocity, a,b,c,d) {
+	newPosition.x += velocity.x;
+	newPosition.y += velocity.y;
+	var figure =[a,b,c,d];
+	var width = figure[2];
+	var height = figure[3];
+	figure[2] = figure[0] + width;
+	figure[3] = figure[1] + height;
+
+	if(newPosition.x <= figure[2] && newPosition.x >= figure[0]) {
+		if(Math.abs(newPosition.y - figure[1]) < 25) return true;
+		if(Math.abs(newPosition.y - figure[3]) < 25)return true;
+		return false;
+	}
+	if(newPosition.y <= figure[3] && newPosition.y >= figure[1]) {
+		if(Math.abs(newPosition.x - figure[0]) < 25) return true;
+		if(Math.abs(newPosition.x - figure[2]) < 25)return true;
+		return false;
+	}
+
+	if(distance(newPosition.x, newPosition.y, figure[0], figure[1]) < 25)return true;
+	if(distance(newPosition.x, newPosition.y, figure[0], figure[3]) < 25)return true;
+	if(distance(newPosition.x, newPosition.y, figure[2], figure[1]) < 25)return true;
+	if(distance(newPosition.x, newPosition.y, figure[2], figure[3]) < 25)return true;
+	return false;
+}
+
 function draw() {
 	if(!user.isLogged()) return;
-	if (!playerPosition.type) return;
+	if (playerPosition.type==0) return;
 
 	// background(0);
-	var newPos = playerPosition;
-	newPos.x +=velocity.x;
-	newPos.y +=velocity.y;
 
-	if (check(playerPosition,newPos))
-	{
-		console.log("DA");
-		playerPosition=newPos;
-		socket.emit('playerPosition', playerPosition);
-	}
-	else {
-		console.log("NET");
+	for(var i = 0; i < board.length; i++) {
+		var a=board[i][0];
+		var b=board[i][1];
+		var c=board[i][2];
+		var d=board[i][3];
+
+		if(intersect(playerPosition, velocity, a,b,c,d)) {
+			playerPosition.x -= velocity.x;
+			playerPosition.y -= velocity.y;
+			return;
+		} else {
+			playerPosition.x -= velocity.x;
+			playerPosition.y -= velocity.y;
+		}
 	}
 
+	playerPosition.x += velocity.x;
+	playerPosition.y += velocity.y;
+
+	socket.emit('playerPosition', playerPosition);
 
 
 }
 function initDraw(data){
-	if (data[0].name == user.getGroupName()){
-		clear();
-		for (var i=0; i<data.length; i++){
-			console.log(data[i].y/5+ " " + data[i].x/5);
-			board[data[i].y/5][data[i].x/5]=data[i].type;
-		}
-		for (var i=Math.max(0,playerPosition.y/5 - 50) ; i<playerPosition.y/5 + 50; i++)
-		{
-			for (var j=Math.max(0,playerPosition.x/5 - 50); j<playerPosition.x/5 + 50; j++){
-				drawObj(board[i][j], i, j)
-			}
-		}
+	if(user.getGroupName() != data[0].name)return;
+	clear();
+	for(var i = 0; i < board.length; i++) {
+		drawObj(4, i, i);
 
+	}
+	for(var i = 0; i < data.length; i++) {
+		drawObj(data[i].type, data[i].y, data[i].x);
 	}
 }
 function drawObj(type, i, j) {
@@ -141,10 +170,11 @@ function drawObj(type, i, j) {
 		fill(0, 0, 255);
 	} else if(type >= 4) {
 		fill(50, 50, 50);
-		rect(j*5 + toAdd.x, i*5 + toAdd.y, 50, 50);
+		rect(board[i][0] + toAdd.x, board[i][1] + toAdd.y, board[i][2], board[i][3]);
+
 		return;
 	}
-  ellipse(j*5 + toAdd.x ,i*5 + toAdd.y,50,50);
+  ellipse(j + toAdd.x ,i + toAdd.y,50,50);
 }
 
 function keyReleased() {
@@ -157,12 +187,12 @@ function keyReleased() {
 
 function keyPressed() {
   if (keyCode === LEFT_ARROW) {
-    velocity.x += -10;
+    velocity.x += -15;
   } else if (keyCode === RIGHT_ARROW) {
-    velocity.x += 10;
+    velocity.x += 15;
   } else if (keyCode === UP_ARROW){
-		velocity.y += -10;
+		velocity.y += -15;
 	} else if (keyCode === DOWN_ARROW){
-		velocity.y += 10;
+		velocity.y += 15;
 	}
 }

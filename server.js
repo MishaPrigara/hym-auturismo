@@ -82,16 +82,20 @@ function newConnection(socket) {
     var sz = 0;
     if(groupIds[users[socket.id]])sz = groupIds[users[socket.id]].length;
   	var fs = require('fs');
-  	var contents = fs.readFileSync('public/assets/level1.txt', 'utf-8');
+  	var contents = fs.readFileSync('public/assets/figures.txt', 'utf-8');
   	var numbers = contents.split(' ');
     console.log(numbers.length);
     var id=0;
     var arr = [];
-    for (var i=0; i<1000; i++){
+    for (var i=0; i<78; i++){
       arr[i] = [];
-      for (var j=0; j<1000; j++){
-        arr[i][j]=numbers[id++];
+      var st=""
+      for (var j=0; j<4; j++){
+        arr[i][j]=parseInt(numbers[id++]);
+        st+=arr[i][j]+" ";
+
       }
+      console.log(st);
     }
     var res = {
       size :sz,
