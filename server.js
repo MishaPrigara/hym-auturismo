@@ -5,7 +5,7 @@ var users = {};
 var groupIds = {};
 var playerPosition = {};
 var app = express();
-var server = app.listen(3000);
+var server = app.listen(80);
 var id = 0;
 
 // var SOCKETS = {};
@@ -68,7 +68,7 @@ function newConnection(socket) {
 			if(index > -1) {
 				groupIds[users[socket.id]].splice(index, 1);
 			}
-			if(!groupIds[users[socket.id]].lenght) {
+			if(!groupIds[users[socket.id]].length) {
 				console.log("Deleted");
 				pass[users[socket.id]] = null;
 			}
@@ -124,7 +124,7 @@ function newConnection(socket) {
         y : playerPosition[currentGroup[i].id].y,
         type : playerPosition[currentGroup[i].id].type,
         name : users[currentGroup[i].id],
-        id : playerPosition[currentGroup[i].id].id
+        dir : playerPosition[currentGroup[i].id].dir
       };
       currentPlayersPositions.push(newData);
     }

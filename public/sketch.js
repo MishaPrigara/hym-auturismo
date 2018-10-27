@@ -7,7 +7,7 @@ var velocity = {};
 var user = new User();
 var center = { };
 var board;
-var storozh;
+var guy = [];
 var shadow;
 var storozh_it = 0;
 function keypressed() {
@@ -35,8 +35,19 @@ function processLogin(ok) {
 	socket.emit('getData', user.getGroupName());
 }
 function preload(){
-	storozh = [loadImage("assets/storozh1_LEFT.png"),  loadImage("assets/storozh1_DOWN.png"),
+	guy[0] = [];
+	guy[1] = [loadImage("assets/storozh1_LEFT.png"),  loadImage("assets/storozh1_DOWN.png"),
 						loadImage("assets/storozh1_RIGHT.png"), loadImage("assets/storozh1_UP.png")];
+
+	guy[2] = [loadImage("assets/guy1_LEFT.png"),  loadImage("assets/guy1_DOWN.png"),
+						loadImage("assets/guy1_RIGHT.png"), loadImage("assets/guy1_UP.png")];
+
+	guy[3] = [loadImage("assets/guy2_LEFT.png"),  loadImage("assets/guy2_DOWN.png"),
+						loadImage("assets/guy2_RIGHT.png"), loadImage("assets/guy2_UP.png")];
+
+	guy[4] = [loadImage("assets/guy3_LEFT.png"),  loadImage("assets/guy3_DOWN.png"),
+						loadImage("assets/guy3_RIGHT.png"), loadImage("assets/guy3_UP.png")];
+
 	shadow = loadImage("assets/shadow.png");
 }
 function setup() {
@@ -51,7 +62,7 @@ function setup() {
 
 	// console.log(frameRate());
 
-	socket = io.connect('http://localhost:3000/');
+	socket = io.connect('http://46.101.126.212:80/');
 	// socket.on('mouse', newDrawing);
 	// socket.on('init', initDrawing);
 
@@ -79,7 +90,7 @@ function setup() {
 		x : 1000,
 		y : 1000,
 		type: 0,
-		id : 3
+		dir : 3
 	};
 
 
@@ -97,6 +108,7 @@ function distance(x, y, a, b) {
 function intersect(newPosition, velocity, a,b,c,d) {
 	newPosition.x += velocity.x;
 	newPosition.y += velocity.y;
+	if(newPosition.type == -1)return false;
 	var figure =[a,b,c,d];
 	var width = figure[2];
 	var height = figure[3];
@@ -153,42 +165,77 @@ function initDraw(data){
 	if(user.getGroupName() != data[0].name)return;
 	clear();
 	for(var i = 0; i < board.length; i++) {
-		drawObj(5, i, i);
+		drawObj(5, i, i, 0);
 
 	}
+	var it = 0, guy_it = 0;
 	for(var i = 0; i < data.length; i++) {
-		drawObj(data[i].type, data[i].y, data[i].x);
+		if(data[i].type == 1)it = i;
+		if(data[i].type == playerPosition.type)guy_it = i;
 	}
-	image(shadow,center.x - center.y, 0 , center.y*2,center.y*2);
 
-	//image(shadow,center.x,center.y);
-	fill(0,0,0);
-	rect(0,0,center.x-center.y,center.y*2);
-	rect(center.x-center.y+center.y*2,0,center.x-center.y,center.y*2);
+	if(playerPosition.type != -1 && playerPosition.type != 1
+			&& distance(playerPosition.x, playerPosition.y, data[it].x, data[it].y) < 50) {
+				playerPosition.type = -1;
+				data[guy_it].type = -1;
+			}
+
+	for(var i = 0; i < data.length; i++) {
+		drawObj(data[i].type, data[i].y, data[i].x, data[i].dir);
+	}
+	if (playerPosition.type!=1 && playerPosition.type!=-1){
+		image(shadow,center.x - center.y, 0 , center.y*2,center.y*2);
+		//image(shadow,center.x,center.y);
+		fill(0,0,0);
+		rect(0,0,center.x-center.y,center.y*2);
+		rect(center.x-center.y+center.y*2,0,center.x-center.y,center.y*2);
+	}
 }
-function drawObj(type, i, j) {
+function drawObj(type, i, j, direction) {
 	// console.log("Maluem");
-	if (type==0) return;
+	if (type==0 || type == -1) return;
 	var toAdd = {
 		x : center.x-playerPosition.x,
 		y : center.y-playerPosition.y
 	};
 	noStroke();
-	if(type == 4) {
 
+	if(type == 4) {
+		if (playerPosition.type == 4) {
+			if(velocity.x < 0) playerPosition.dir = 0;
+			else if(velocity.x > 0)playerPosition.dir = 2;
+			else if(velocity.y > 0)playerPosition.dir = 1;
+			else if(velocity.y < 0) playerPosition.dir = 3;
+			image(guy[playerPosition.type][playerPosition.dir],j+toAdd.x-guy[4][0].width / 2,i+toAdd.y - guy[4][0].height / 2);
+		} else
+			image(guy[4][direction],j+toAdd.x-guy[4][0].width / 2,i+toAdd.y - guy[4][0].height / 2);
 	} else if(type == 2) {
-		fill(0, 255, 0);
+		if (playerPosition.type == 2) {
+			if(velocity.x < 0) playerPosition.dir = 0;
+			else if(velocity.x > 0)playerPosition.dir = 2;
+			else if(velocity.y > 0)playerPosition.dir = 1;
+			else if(velocity.y < 0) playerPosition.dir = 3;
+			image(guy[playerPosition.type][playerPosition.dir],j+toAdd.x-guy[2][0].width / 2,i+toAdd.y - guy[2][0].height / 2);
+		} else
+			image(guy[2][direction],j+toAdd.x-guy[2][0].width / 2,i+toAdd.y - guy[2][0].height / 2);
 	} else if(type == 3) {
-		fill(0, 0, 255);
+		if (playerPosition.type == 3) {
+			if(velocity.x < 0) playerPosition.dir = 0;
+			else if(velocity.x > 0)playerPosition.dir = 2;
+			else if(velocity.y > 0)playerPosition.dir = 1;
+			else if(velocity.y < 0) playerPosition.dir = 3;
+			image(guy[playerPosition.type][playerPosition.dir],j+toAdd.x-guy[3][0].width / 2,i+toAdd.y - guy[3][0].height / 2);
+		} else
+			image(guy[3][direction],j+toAdd.x-guy[3][0].width / 2,i+toAdd.y - guy[3][0].height / 2);
 	} else if (type == 1){
 		if (playerPosition.type == 1) {
-			if(velocity.x < 0)playerPosition.id = 0;
-			else if(velocity.x > 0)playerPosition.id = 2;
-			else if(velocity.y > 0)playerPosition.id = 1;
-			else playerPosition.id = 3;
-			console.log("ya tak ho4u " + it);
-		}
-		image(storozh[playerPosition.id],j+toAdd.x-storozh[0].width / 2,i+toAdd.y - storozh[0].height / 2);
+			if(velocity.x < 0) playerPosition.dir = 0;
+			else if(velocity.x > 0)playerPosition.dir = 2;
+			else if(velocity.y > 0)playerPosition.dir = 1;
+			else if(velocity.y < 0) playerPosition.dir = 3;
+			image(guy[playerPosition.type][playerPosition.dir],j+toAdd.x-guy[1][0].width / 2,i+toAdd.y - guy[1][0].height / 2);
+		} else
+			image(guy[1][direction],j+toAdd.x-guy[1][0].width / 2,i+toAdd.y - guy[1][0].height / 2);
 
 		return;
 	} else if(type >= 5) {
@@ -197,7 +244,7 @@ function drawObj(type, i, j) {
 
 		return;
 	}
-  ellipse(j + toAdd.x ,i + toAdd.y,50,50);
+  //ellipse(j + toAdd.x ,i + toAdd.y,50,50);
 }
 
 function keyReleased() {

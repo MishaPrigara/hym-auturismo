@@ -2,7 +2,7 @@ function User() {
 	var logged = false;
 	var password = "";
 	var groupName = "";
-
+	var id = 0;
 
 	this.login = function() {
 		this.groupName = document.getElementById("name").value;
