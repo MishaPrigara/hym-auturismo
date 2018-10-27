@@ -27,7 +27,6 @@ function newConnection(socket) {
 	socket.on('checkLogin', checkLogin);
 
 	function checkLogin(user) {
-    console.log("Check login");
 		if(!groupIds[user.groupName] || !groupIds[user.groupName].length) {
 			groupIds[user.groupName] = [];
 			pass[user.groupName] = user.pass;
@@ -52,9 +51,17 @@ function newConnection(socket) {
 		socket.emit('loggedIn', (pass[user.groupName] === user.pass));
 	}
 
+	socket.on('getData', sendData);
+
+	function sendData() {
+		if(!users[socket.id] || !saved[users[socket.id]])return;
+		// console.log("Tried to check but smth went wrong :-( " + saved[users[socket.id]].length);
+		// console.log(saved[users[socket.id]].length);
+		socket.emit('mouse', saved[users[socket.id]]);
+	}
+
 
 	socket.on('disconnect', function () {
-    console.log("disconnect check");
 		if(users[socket.id] !== null && groupIds[users[socket.id]]) {
 			console.log("Somebody left " + users[socket.id]);
 	    var index = groupIds[users[socket.id]].indexOf(socket);
@@ -70,27 +77,42 @@ function newConnection(socket) {
 		}
   });
 
-  socket.on('playerPosition', receivePosition);
 
-  function receivePosition(curPlayerPosition) {
-    //console.log("PRINAL");
+  socket.on('getGroupSize', function(key){
+    var sz = 0;
+    if(groupIds[users[socket.id]])sz = groupIds[users[socket.id]].length;
+    var res = {
+      size :sz,
+      key : key
+    };
+    socket.emit('receiveGroupSize', res);
+  });
+
+
+
+
+
+
+  socket.on('playerPosition', receivePostion);
+
+  function receivePostion(curPlayerPosition) {
     // console.log(curPlayerPosition.x + " " + curPlayerPosition.y + " received from " + socket.id);
     playerPosition[socket.id] = curPlayerPosition;
-  /*  var currentGroup = groupIds[users[socket.id]];
+    var currentGroup = groupIds[users[socket.id]];
     var currentPlayersPositions = [];
     if(!currentGroup || !currentGroup.length)return;
     for(var i = 0; i < currentGroup.length; i++) {
       var newData = {
         x : playerPosition[currentGroup[i].id].x,
         y : playerPosition[currentGroup[i].id].y,
+        type : playerPosition[currentGroup[i].id].type,
         name : users[currentGroup[i].id]
       };
       currentPlayersPositions.push(newData);
-      delete newDate;
-    } */
+    }
 
-    socket.emit('receivePositions', playerPosition[socket.id]);
-    return;
+
+    socket.emit('receivePositions', currentPlayersPositions);
   }
 
 
