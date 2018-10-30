@@ -18,6 +18,7 @@ var waitForOthers = "Wait for other players to join";
 var joined = 0;
 var key = 0;
 var firstReceive = false;
+var prevWidth = 0, prevHeight = 0;
 
 function keypressed() {
 	if(event.key === 'Enter') {
@@ -46,7 +47,7 @@ function processLogin(ok) {
 function preload(){
 
 	font = loadFont('assets/OCRAEXT.TTF');
-	socket = io.connect('http://139.59.158.220:80/');
+	socket = io.connect('http://localhost:3000/');
 	guy[0] = [];
 	guy[1] = [loadImage("assets/storozh1_LEFT.png"),  loadImage("assets/storozh1_DOWN.png"),
 						loadImage("assets/storozh1_RIGHT.png"), loadImage("assets/storozh1_UP.png")];
@@ -69,13 +70,15 @@ function setup() {
 	textFont(font);
   textSize(fontsize);
   textAlign(CENTER, CENTER);
+
+	background(159, 163, 165);
+	console.log(windowWidth + " <> " + windowHeight);
 	frameRate(fr);
-	createCanvas(windowWidth, windowHeight);
+
 	center = {
 		x : windowWidth/2,
 		y: windowHeight/2
 	}
-	background(58, 58, 58);
 
 	// console.log(frameRate());
 
@@ -84,6 +87,7 @@ function setup() {
 
 	key=Math.random();
 
+	createCanvas(windowWidth, windowHeight);
 
 
 	socket.on('receiveGroupSize', function (data){
@@ -194,8 +198,10 @@ function isPlaying(audio) {
 
 function draw() {
 
+
 		//console.log("DA1");
 	if(!user.isLogged() || timeEnd) return;
+
 
 	textAlign(CENTER);
 	if(playerPosition.locked == -1) {
@@ -258,6 +264,8 @@ function drawWords(words, x) {
 function initDraw(data){
 	if(user.getGroupName() != data[0].name)return;
 	clear();
+	fill(159, 163, 165);
+	rect(0, 0, windowWidth, windowHeight);
 	for(var i = 0; i < board.length; i++) {
 		drawObj(5, i, i, 0);
 
@@ -274,7 +282,11 @@ function initDraw(data){
 				data[guy_it].type = -1;
 				socket.emit('died', playerPosition);
 			}
+	var backData = {
+		type : 5,
+		x : 0,
 
+	};
 	for(var i = 0; i < data.length; i++) {
 		drawObj(data[i].type, data[i].y, data[i].x, data[i].dir);
 	}
