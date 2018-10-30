@@ -201,14 +201,14 @@ socket.on('startTimer', function (data) {
     for(var i = data.type - 1; i >= 1; i--) {
       if(cnt[data.name][i] > 0) {
         sum = 0;
-        console.log("found " + i);
+        //console.log("found " + i);
       }
     }
-    console.log(sum);
-    console.log("prev " + time[data.name]);
+    //console.log(sum);
+    //console.log("prev " + time[data.name]);
     time[data.name] = Math.max(0, time[data.name] - sum);
 
-    console.log("after " + time[data.name]);
+    //console.log("after " + time[data.name]);
     var newData = {
       name : data.name,
       time : time[data.name]

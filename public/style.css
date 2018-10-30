@@ -8,7 +8,7 @@
   box-sizing: border-box;
 }
 @keyframes sliding{
-    0%{ 
+    0%{
         top: 70%;
     }
     100%{
@@ -16,7 +16,7 @@
     }
 }
 @keyframes rotating{
-    from{ 
+    from{
         transform: rotate(0deg);
     }
     to{
@@ -24,7 +24,7 @@
     }
 }
 @keyframes prozr{
-    from{ 
+    from{
         opacity:1;
     }
     to{
@@ -32,23 +32,23 @@
     }
 }
 @keyframes slidingR{
-    0%{ 
+    0%{
         margin-top:-35%;
-    }  
+    }
     100%{
         margin-top:0%;
     }
 }
 @keyframes rotatingR{
-    from{ 
+    from{
         transform: rotate(180deg);
     }
     to{
         transform: rotate(0deg);
     }
 }
-@keyframes prozrR{  
-    0%{ 
+@keyframes prozrR{
+    0%{
         opacity:0;
     }
     100%{
@@ -77,7 +77,7 @@ body {
     clear:both;
 }
 .logo{
-    z-index: 9999; 
+    z-index: 9999;
     margin-top: 5%;
 }
 .logo_img{
@@ -105,7 +105,7 @@ body {
 .rules{
   background: #ffb100;
   color: #fff;
-  display: inline-block;  
+  display: inline-block;
   padding: 0em 2em;
   margin: 0 auto;
   box-shadow: 0 50px 50px rgba(0, 0, 0, 0.2);
@@ -264,7 +264,7 @@ body {
 .container .sign-form .questions li input:focus {
   font-family: logo_ttf, "HelveticaNeue-Light", "Helvetica Neue Light", sans-serif;
   outline: none;
-  border-bottom: 3px solid #6A79A6;
+  border-bottom: 3px solid #3a3a3a;
 }
 .container .sign-form .questions li:not(:first-child) {
   font-family: logo_ttf, "HelveticaNeue-Light", "Helvetica Neue Light", sans-serif;

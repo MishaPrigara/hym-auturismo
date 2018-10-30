@@ -3,22 +3,15 @@
 		<title>WANTED.</title>
 		<link rel="stylesheet" href="style.css">
 		<link rel="shortcut icon" href="assets/icon.ico"/>
+		<linm rel="preload" href="assets" href="assets/OCRAEXT.ttf">
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
-		<script src="registerStyle.js"></script>
-		<script src="libraries/p5.js"></script>
-		<script src="libraries/p5.dom.js"></script>
-    <script src="libraries/p5.sound.js"></script>
-		<script src="user.js"></script>
-		<script src="sketch.js"></script>
-		<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.1/socket.io.js"></script>
-		<script src='http://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.2/jquery.min.js'></script>
-		<script src="registerStyle.js"></script>
+
 
 
 	</head>
 	<body scroll = "no" style = "overflow: hidden;margin: 0 auto;" onselectstart="return false" onmousedown="return false">
 
-
+		<div id="loginForm">
 
         <div class="logo">
             <img src="assets/logo.png" class="logo_img">
@@ -43,7 +36,7 @@
                         <input onkeypress="keypressed()" id="password" name="password" type="password" placeholder="Make sure it's ok" autofocus/>
                         <span id="show-pwd" class="view"></span>
                     </li>
-                    
+
                 </ol>
                 <div class="error-message"></div>
             </form>
@@ -72,5 +65,15 @@
 				<div>
 					<audio allow="autoplay" id="background-music" style="display:none;" src="assets/back.mp3"></audio>
 				</div>
+			</div>
+			<script src="registerStyle.js"></script>
+			<script src="libraries/p5.js"></script>
+			<script src="libraries/p5.dom.js"></script>
+	    <script src="libraries/p5.sound.js"></script>
+			<script src="user.js"></script>
+			<script src="sketch.js"></script>
+			<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.1/socket.io.js"></script>
+			<script src='http://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.2/jquery.min.js'></script>
+			<script src="registerStyle.js"></script>
 	</body>
 </html>

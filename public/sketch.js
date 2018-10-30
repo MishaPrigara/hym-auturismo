@@ -15,6 +15,10 @@ var storozh_it = 0;
 var font, fontsize = 40;
 var timeEnd = false;
 var waitForOthers = "Wait for other players to join";
+var joined = 0;
+var key = 0;
+var firstReceive = false;
+
 function keypressed() {
 	if(event.key === 'Enter') {
 		login();
@@ -40,8 +44,9 @@ function processLogin(ok) {
 	socket.emit('getData', user.getGroupName());
 }
 function preload(){
-	font = loadFont('assets/OCRAEXT.ttf');
-	background_song = document.getElementById("background-music");
+
+	font = loadFont('assets/OCRAEXT.TTF');
+	socket = io.connect('http://139.59.158.220:80/');
 	guy[0] = [];
 	guy[1] = [loadImage("assets/storozh1_LEFT.png"),  loadImage("assets/storozh1_DOWN.png"),
 						loadImage("assets/storozh1_RIGHT.png"), loadImage("assets/storozh1_UP.png")];
@@ -59,6 +64,7 @@ function preload(){
 }
 function setup() {
 	// console.log(frameRate());
+	background_song = document.getElementById("background-music");
 
 	textFont(font);
   textSize(fontsize);
@@ -69,21 +75,22 @@ function setup() {
 		x : windowWidth/2,
 		y: windowHeight/2
 	}
-	background(160, 169, 204);
+	background(58, 58, 58);
 
 	// console.log(frameRate());
 
-	socket = io.connect('http://localhost:3000/');
 	// socket.on('mouse', newDrawing);
 	// socket.on('init', initDrawing);
 
-	var key=Math.random();
+	key=Math.random();
 
 
 
 	socket.on('receiveGroupSize', function (data){
 		//console.log("SECOND " + data.key + " got " + data.size);
-		if (data.key === key){
+		if(data.key === key) joined = data.size;
+		if (data.key === key && !firstReceive){
+			firstReceive = true;
 			playerPosition.type = data.size;
 			if (playerPosition.type === 1){
 				playerPosition.x=660;
@@ -118,7 +125,7 @@ function setup() {
 	socket.on('receivePositions', initDraw);
 	socket.on('getCnt', cnt);
 	socket.on('updateTime', function (data) {
-		console.log("received" + data.name + " " + data.time);
+		//console.log("received" + data.name + " " + data.time);
 		if(user.getGroupName() === data.name) {
 			timer = data.time;
 			if(timer == 0) {
@@ -196,6 +203,9 @@ function draw() {
 	} else if(!playerPosition.locked) {
 	  drawWords("" + timer, width * .5 );
 	} else {
+		key = Math.random();
+		socket.emit('getGroupSize', key);
+		waitForOthers = "Wait for other players to join (" + joined + "/4)";
 		drawWords(waitForOthers, width * .5);
 	}
 	//	console.log("DA2");
@@ -272,8 +282,8 @@ function initDraw(data){
 		image(shadow,center.x - center.y, 0 , center.y*2,center.y*2);
 		//image(shadow,center.x,center.y);
 		fill(0,0,0);
-		rect(0,0,center.x-center.y,center.y*2);
-		rect(center.x-center.y+center.y*2,0,center.x-center.y,center.y*2);
+		rect(0,0,center.x-center.y + 50,center.y*2);
+		rect(center.x-center.y+center.y*2 - 50,0,center.x-center.y+200,center.y*2);
 	}
 }
 function drawObj(type, i, j, direction) {
