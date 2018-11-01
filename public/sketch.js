@@ -127,34 +127,10 @@ function setup() {
 	background_song.play();
 
 	socket.on('receivePositions', initDraw);
-	socket.on('getCnt', cnt);
-	socket.on('updateTime', function (data) {
-		//console.log("received" + data.name + " " + data.time);
-		if(user.getGroupName() === data.name) {
-			timer = data.time;
-			if(timer == 0) {
-				playerPosition.locked = -1;
-				timeEnd = true;
-			}
-		}
+	socket.on('receiveTime',function(data){
+		timer=data;
 	});
 
-}
-function cnt(data){
-	if (user.getGroupName()==data[0].name){
-		var was = playerPosition.locked;
-		for (var i=0; i<data.length; i++){
-			playerPosition.locked=data[i].locked;
-		}
-		if(was != playerPosition.locked) {
-			var newData = {
-				name : user.getGroupName(),
-				type : playerPosition.type
-			};
-			socket.emit('startTimer', newData);
-		}
-
-	}
 }
 function sqr(x) {
 	return x * x;
@@ -229,14 +205,13 @@ function draw() {
 		var d=board[i][3];
 
 		if(playerPosition.locked) {
-			//console.log("DA");
-			socket.emit('sendCnt',playerPosition);
 			socket.emit('playerPosition', playerPosition);
 			return;
 		}
 		if(intersect(playerPosition, velocity, a,b,c,d)) {
 			playerPosition.x -= velocity.x;
 			playerPosition.y -= velocity.y;
+			socket.emit('playerPosition', playerPosition);
 			return;
 		} else {
 			playerPosition.x -= velocity.x;
@@ -260,7 +235,6 @@ function drawWords(words, x) {
   text(words, x, 80);
 
 }
-
 function initDraw(data){
 	if(user.getGroupName() != data[0].name)return;
 	clear();
@@ -280,7 +254,6 @@ function initDraw(data){
 			&& distance(playerPosition.x, playerPosition.y, data[it].x, data[it].y) < 50) {
 				playerPosition.type = -1;
 				data[guy_it].type = -1;
-				socket.emit('died', playerPosition);
 			}
 	var backData = {
 		type : 5,
@@ -297,6 +270,22 @@ function initDraw(data){
 		rect(0,0,center.x-center.y + 50,center.y*2);
 		rect(center.x-center.y+center.y*2 - 50,0,center.x-center.y+200,center.y*2);
 	}
+	var cnt=data.length;
+	var cntLockedBeforeStart=0;
+	var cntLockedAfterStart=0;
+	var cntAlive=0;
+	for (var i=0; i < data.length; i++){
+		cntLockedBeforeStart+=(data[i].locked==1);
+		cntAlive+=(data[i].type!=-1);
+		cntLockedAfterStart+=(data[i].locked==-1);
+	}
+	if (cntLockedBeforeStart>0 && cnt==4){
+		playerPosition.locked=0;
+	}
+	if ((cntAlive==1 && cntLockedBeforeStart==0) || cntLockedAfterStart==4){
+		playerPosition.locked=-1;
+	}
+
 }
 function drawObj(type, i, j, direction) {
 	// console.log("Maluem");

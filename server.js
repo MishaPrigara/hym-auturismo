@@ -1,3 +1,8 @@
+// CONSTANTS
+var GAMELENGTH = 10;
+
+// VARIABLES
+
 var express = require('express');
 var saved = {};
 var pass = {};
@@ -12,6 +17,9 @@ var timer = 115;
 var cnt = {};
 var server = app.listen(3000);
 var id = 0;
+var groupTime = [];
+var groupNames = [];
+var timerIds = [];
 // var SOCKETS = {};
 
 app.use(express.static('public'));
@@ -23,7 +31,13 @@ var io = socket(server);
 
 io.sockets.on('connection', newConnection);
 
+function find(arr,value){
+	for (var i=0; i<arr.length; i++){
+		if (arr[i]==value) return i;
+	}
+	return -1;
 
+}
 
 function newConnection(socket) {
 	// socket.loged = false;
@@ -35,6 +49,15 @@ function newConnection(socket) {
 			groupIds[user.groupName] = [];
 			pass[user.groupName] = user.pass;
 			saved[user.groupName] = null;
+			groupNames.push(user.groupName);
+			groupTime.push(GAMELENGTH);
+			var id = groupTime.length-1;
+			var curGroup = user.groupName;
+			timerIds[id]=setInterval(function decrease(){
+				groupTime[id]-=(groupIds[curGroup].length==4);
+				console.log(id + " " + groupTime[id]);
+				if (groupTime[id]==0) clearTimeout(timerIds[id]);
+			},1000, id, curGroup);
 		}
 
 		if(pass[user.groupName] === user.pass) {
@@ -123,99 +146,34 @@ function newConnection(socket) {
     var currentGroup = groupIds[users[socket.id]];
     var currentPlayersPositions = [];
     if(!currentGroup || !currentGroup.length)return;
+		var currentGroupIndex=find(groupNames,users[socket.id]);
+		console.log(currentGroupIndex + " " + users[socket.id]);
+		console.log(groupTime[currentGroupIndex]);
+		var lock=1;
+		if (groupTime[currentGroupIndex]==0){
+			lock=-1;
+		}
     for(var i = 0; i < currentGroup.length; i++) {
-      var newData = {
-        x : playerPosition[currentGroup[i].id].x,
-        y : playerPosition[currentGroup[i].id].y,
-        type : playerPosition[currentGroup[i].id].type,
-        name : users[currentGroup[i].id],
-        dir : playerPosition[currentGroup[i].id].dir
-      };
-      currentPlayersPositions.push(newData);
-    }
-
-
-    socket.emit('receivePositions', currentPlayersPositions);
-  }
-
-  // var timerFun = setInterval(function() {
-  //   console.log(timer);
-  //   timer--;
-  // }, 1000);
-socket.on('sendCnt',function(curPlayerPosition){
-    playerPosition[socket.id] = curPlayerPosition;
-    var currentGroup = groupIds[users[socket.id]];
-    var currentPlayersPositions = [];
-    if(!currentGroup || !currentGroup.length)return;
-    var is4=false;
-    var final=false;
-    for (var i=0; i< currentGroup.length; i++){
-      is4|=(playerPosition[currentGroup[i].id].type===4);
-      final|=(playerPosition[currentGroup[i].id].locked===-1);
-    }
-    // console.log(perem);
-    for(var i = 0; i < currentGroup.length; i++) {
-      var perem=1;
-      if (final) perem=-1;
-      else if (is4) perem=0;
       var newData = {
         x : playerPosition[currentGroup[i].id].x,
         y : playerPosition[currentGroup[i].id].y,
         type : playerPosition[currentGroup[i].id].type,
         name : users[currentGroup[i].id],
         dir : playerPosition[currentGroup[i].id].dir,
-        locked: perem
+				locked : Math.min(lock,playerPosition[currentGroup[id].id].locked)
       };
       currentPlayersPositions.push(newData);
     }
-    socket.emit('getCnt',currentPlayersPositions);
-});
+    socket.emit('receivePositions', currentPlayersPositions);
+		socket.emit('receiveTime',groupTime[currentGroupIndex]);
 
-socket.on('died', function(data) {
-
-
-  if(!died[data.name]) {
-    died[data.name] = 1;
-  } else {
-    died[data.name]++;
   }
-  if(died[data.name] == 3) {
-    time[data.name] = 0;
-  }
-  var newData = {
-      name: data.name,
-      time: 0
-  };
-  socket.emit('updateTime', newData);
-});
 
-socket.on('startTimer', function (data) {
-  time[data.name] = 180;
 
-  if(!cnt[data.name]) {
-    cnt[data.name] = [0, 0, 0, 0, 0];
-  }
-  timerId[data.name] = setInterval(function () {
-    cnt[data.name][data.type] = 1;
-    var sum = 1;
-    for(var i = data.type - 1; i >= 1; i--) {
-      if(cnt[data.name][i] > 0) {
-        sum = 0;
-        //console.log("found " + i);
-      }
-    }
-    //console.log(sum);
-    //console.log("prev " + time[data.name]);
-    time[data.name] = Math.max(0, time[data.name] - sum);
 
-    //console.log("after " + time[data.name]);
-    var newData = {
-      name : data.name,
-      time : time[data.name]
-    };
-    socket.emit('updateTime', newData);
-  }, 1000);
-});
+
+
+
 
 
 }
