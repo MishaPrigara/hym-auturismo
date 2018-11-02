@@ -1,3 +1,7 @@
+// CONSTANS
+var NEEDPLAYERS=2;
+// VARIABLES
+
 var socket;
 var r = 30;
 var fr = 30;
@@ -14,11 +18,14 @@ var shadow;
 var storozh_it = 0;
 var font, fontsize = 40;
 var timeEnd = false;
-var waitForOthers = "Wait for other players to join";
+var waitForOthers = "Waiting for other players to join";
 var joined = 0;
 var key = 0;
 var firstReceive = false;
 var prevWidth = 0, prevHeight = 0;
+var player = {
+	speed: 16
+};
 
 function keypressed() {
 	if(event.key === 'Enter') {
@@ -47,7 +54,7 @@ function processLogin(ok) {
 function preload(){
 
 	font = loadFont('assets/OCRAEXT.TTF');
-	socket = io.connect('http://localhost:3000/');
+	socket = io.connect('http://192.168.1.135:3000');
 	guy[0] = [];
 	guy[1] = [loadImage("assets/storozh1_LEFT.png"),  loadImage("assets/storozh1_DOWN.png"),
 						loadImage("assets/storozh1_RIGHT.png"), loadImage("assets/storozh1_UP.png")];
@@ -99,6 +106,7 @@ function setup() {
 			if (playerPosition.type === 1){
 				playerPosition.x=660;
 				playerPosition.y=4070;
+				player.speed=15;
 			}
 			board = data.lvl;
 		}
@@ -108,6 +116,7 @@ function setup() {
 		user.setLogged(data);
 		processLogin(data);
 		socket.emit('getGroupSize', key);
+		socket.emit('playerPosition',playerPosition);
 	});
 
 
@@ -173,23 +182,10 @@ function isPlaying(audio) {
 }
 
 function draw() {
-
-
 		//console.log("DA1");
 	if(!user.isLogged() || timeEnd) return;
 
 
-	textAlign(CENTER);
-	if(playerPosition.locked == -1) {
-		drawWords("GAME OVER", width * .5);
-	} else if(!playerPosition.locked) {
-	  drawWords("" + timer, width * .5 );
-	} else {
-		key = Math.random();
-		socket.emit('getGroupSize', key);
-		waitForOthers = "Wait for other players to join (" + joined + "/4)";
-		drawWords(waitForOthers, width * .5);
-	}
 	//	console.log("DA2");
 	if (playerPosition.type==0) return;
 	// background(0);
@@ -238,38 +234,40 @@ function drawWords(words, x) {
 function initDraw(data){
 	if(user.getGroupName() != data[0].name)return;
 	clear();
+	/// BACKGROUND FILL
 	fill(159, 163, 165);
 	rect(0, 0, windowWidth, windowHeight);
+
+	/// MAP DRAWING
 	for(var i = 0; i < board.length; i++) {
 		drawObj(5, i, i, 0);
 
 	}
+
+	/// CHEKING FOR COLLISION WITH STOROZH
 	var it = 0, guy_it = 0;
 	for(var i = 0; i < data.length; i++) {
 		if(data[i].type == 1)it = i;
 		if(data[i].type == playerPosition.type)guy_it = i;
 	}
-
 	if(playerPosition.type != -1 && playerPosition.type != 1
 			&& distance(playerPosition.x, playerPosition.y, data[it].x, data[it].y) < 50) {
 				playerPosition.type = -1;
 				data[guy_it].type = -1;
 			}
-	var backData = {
-		type : 5,
-		x : 0,
-
-	};
 	for(var i = 0; i < data.length; i++) {
 		drawObj(data[i].type, data[i].y, data[i].x, data[i].dir);
 	}
 	if (playerPosition.type!=1 && playerPosition.type!=-1){
 		image(shadow,center.x - center.y, 0 , center.y*2,center.y*2);
-		//image(shadow,center.x,center.y);
 		fill(0,0,0);
 		rect(0,0,center.x-center.y + 50,center.y*2);
 		rect(center.x-center.y+center.y*2 - 50,0,center.x-center.y+200,center.y*2);
 	}
+
+
+	/// GAME LOGIC ///
+
 	var cnt=data.length;
 	var cntLockedBeforeStart=0;
 	var cntLockedAfterStart=0;
@@ -279,11 +277,24 @@ function initDraw(data){
 		cntAlive+=(data[i].type!=-1);
 		cntLockedAfterStart+=(data[i].locked==-1);
 	}
-	if (cntLockedBeforeStart>0 && cnt==4){
+	if (cntLockedBeforeStart>0 && cnt==NEEDPLAYERS){
 		playerPosition.locked=0;
 	}
-	if ((cntAlive==1 && cntLockedBeforeStart==0) || cntLockedAfterStart==4){
+	if ((cntAlive==1 && cntLockedBeforeStart==0) || cntLockedAfterStart==NEEDPLAYERS){
 		playerPosition.locked=-1;
+	}
+
+	/// TEXT DRAW ///
+
+	textAlign(CENTER);
+	if(playerPosition.locked == -1) {
+		drawWords("GAME OVER", width * .5);
+	} else if(!playerPosition.locked) {
+	  drawWords("" + timer, width * .5 );
+	} else {
+		var joined=data.length;
+		waitForOthers = "Wait for other players to join (" + joined + "/" + NEEDPLAYERS + ")";
+		drawWords(waitForOthers, width * .5);
 	}
 
 }
@@ -344,21 +355,26 @@ function drawObj(type, i, j, direction) {
 }
 
 function keyReleased() {
-	if (keyCode === LEFT_ARROW || keyCode === RIGHT_ARROW){
-		velocity.x=0;
-	} else if (keyCode === UP_ARROW || keyCode === DOWN_ARROW){
-		velocity.y=0;
+	if (keyCode === LEFT_ARROW){
+		velocity.x+=player.speed;
+	} else if (keyCode === RIGHT_ARROW){
+		velocity.x-=player.speed;
+	} else if (keyCode === UP_ARROW){
+		velocity.y+=player.speed;
+	} else if (keyCode === DOWN_ARROW){
+		velocity.y-=player.speed;
 	}
+
 }
 
 function keyPressed() {
   if (keyCode === LEFT_ARROW) {
-    velocity.x += -15;
+    velocity.x += -player.speed;
   } else if (keyCode === RIGHT_ARROW) {
-    velocity.x += 15;
+    velocity.x += player.speed;
   } else if (keyCode === UP_ARROW){
-		velocity.y += -15;
+		velocity.y += -player.speed;
 	} else if (keyCode === DOWN_ARROW){
-		velocity.y += 15;
+		velocity.y += player.speed;
 	}
 }

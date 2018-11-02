@@ -145,7 +145,7 @@ body {
 
 
 #check:not(:checked)~ .rules_lable > .rules_wrapper > .rules > .rules_up{
-    animation: rotatingR 3s;
+    animation: rotatingR 2s;
 }
 #check:not(:checked)~ .rules_lable > .rules_wrapper > .rules{
     animation: slidingR 2s;

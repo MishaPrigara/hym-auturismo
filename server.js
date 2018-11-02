@@ -1,6 +1,6 @@
 // CONSTANTS
-var GAMELENGTH = 10;
-
+var GAMELENGTH = 120;
+var NEEDPLAYERS=2;
 // VARIABLES
 
 var express = require('express');
@@ -54,14 +54,14 @@ function newConnection(socket) {
 			var id = groupTime.length-1;
 			var curGroup = user.groupName;
 			timerIds[id]=setInterval(function decrease(){
-				groupTime[id]-=(groupIds[curGroup].length==4);
+				groupTime[id]-=(groupIds[curGroup].length==NEEDPLAYERS);
 				console.log(id + " " + groupTime[id]);
 				if (groupTime[id]==0) clearTimeout(timerIds[id]);
 			},1000, id, curGroup);
 		}
 
 		if(pass[user.groupName] === user.pass) {
-      if(groupIds[user.groupName].length >= 4) {
+      if(groupIds[user.groupName].length >= NEEDPLAYERS) {
         socket.emit('loggedIn', false);
         return;
       }
@@ -99,6 +99,7 @@ function newConnection(socket) {
 			if(!groupIds[users[socket.id]].length) {
 				console.log("Deleted");
 				pass[users[socket.id]] = null;
+				groupNames.splice(find(groupNames,))
 			}
 			console.log("Now size of " + users[socket.id] + " is " + groupIds[users[socket.id]].length);
 			users[socket.id] = null;
