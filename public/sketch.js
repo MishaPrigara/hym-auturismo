@@ -1,5 +1,5 @@
 // CONSTANS
-var NEEDPLAYERS=2;
+var NEEDPLAYERS=4;
 // VARIABLES
 
 var socket;
@@ -54,7 +54,7 @@ function processLogin(ok) {
 function preload(){
 
 	font = loadFont('assets/OCRAEXT.TTF');
-	socket = io.connect('http://192.168.1.135:3000');
+	socket = io.connect('http://192.168.1.13:3000');
 	guy[0] = [];
 	guy[1] = [loadImage("assets/storozh1_LEFT.png"),  loadImage("assets/storozh1_DOWN.png"),
 						loadImage("assets/storozh1_RIGHT.png"), loadImage("assets/storozh1_UP.png")];
@@ -100,9 +100,10 @@ function setup() {
 	socket.on('receiveGroupSize', function (data){
 		//console.log("SECOND " + data.key + " got " + data.size);
 		if(data.key === key) joined = data.size;
-		if (data.key === key && !firstReceive){
-			firstReceive = true;
+		if (data.key === key){
 			playerPosition.type = data.size;
+			console.log("DATA SZ = " + data.size + "TYPE = " +playerPosition.type);
+			playerPosition.id = data.size - 1;
 			if (playerPosition.type === 1){
 				playerPosition.x=660;
 				playerPosition.y=4070;
@@ -111,12 +112,12 @@ function setup() {
 			board = data.lvl;
 		}
 	});
+
 	socket.on('checkedLogin', processLogin);
 	socket.on('loggedIn', function(data) {
 		user.setLogged(data);
 		processLogin(data);
 		socket.emit('getGroupSize', key);
-		socket.emit('playerPosition',playerPosition);
 	});
 
 
@@ -127,10 +128,11 @@ function setup() {
 	playerPosition = {
 		x : 1000,
 		y : 1000,
-		type: 0,
+		type: 1,
 		dir : 3,
 		locked : 1,
-		name : user.getGroupName()
+		name : user.getGroupName(),
+		id : 0
 	};
 
 	background_song.play();
@@ -183,7 +185,7 @@ function isPlaying(audio) {
 
 function draw() {
 		//console.log("DA1");
-	if(!user.isLogged() || timeEnd) return;
+	if(!user.isLogged() || timeEnd || !board) return;
 
 
 	//	console.log("DA2");
@@ -232,32 +234,28 @@ function drawWords(words, x) {
 
 }
 function initDraw(data){
+
 	if(user.getGroupName() != data[0].name)return;
 	clear();
-	/// BACKGROUND FILL
+
+	playerPosition=data[playerPosition.id];
+
+	/// BACKGROUND FILL ///
+
 	fill(159, 163, 165);
 	rect(0, 0, windowWidth, windowHeight);
 
-	/// MAP DRAWING
+	/// MAP DRAWING ///
+
 	for(var i = 0; i < board.length; i++) {
 		drawObj(5, i, i, 0);
-
 	}
-
-	/// CHEKING FOR COLLISION WITH STOROZH
-	var it = 0, guy_it = 0;
-	for(var i = 0; i < data.length; i++) {
-		if(data[i].type == 1)it = i;
-		if(data[i].type == playerPosition.type)guy_it = i;
-	}
-	if(playerPosition.type != -1 && playerPosition.type != 1
-			&& distance(playerPosition.x, playerPosition.y, data[it].x, data[it].y) < 50) {
-				playerPosition.type = -1;
-				data[guy_it].type = -1;
-			}
 	for(var i = 0; i < data.length; i++) {
 		drawObj(data[i].type, data[i].y, data[i].x, data[i].dir);
 	}
+
+	/// DRAWING FIELD OF VIEW OF STUDENT ///
+
 	if (playerPosition.type!=1 && playerPosition.type!=-1){
 		image(shadow,center.x - center.y, 0 , center.y*2,center.y*2);
 		fill(0,0,0);
@@ -265,10 +263,8 @@ function initDraw(data){
 		rect(center.x-center.y+center.y*2 - 50,0,center.x-center.y+200,center.y*2);
 	}
 
-
 	/// GAME LOGIC ///
-
-	var cnt=data.length;
+	/*var cnt=data.length;
 	var cntLockedBeforeStart=0;
 	var cntLockedAfterStart=0;
 	var cntAlive=0;
@@ -283,6 +279,7 @@ function initDraw(data){
 	if ((cntAlive==1 && cntLockedBeforeStart==0) || cntLockedAfterStart==NEEDPLAYERS){
 		playerPosition.locked=-1;
 	}
+	*/
 
 	/// TEXT DRAW ///
 
@@ -301,6 +298,7 @@ function initDraw(data){
 function drawObj(type, i, j, direction) {
 	// console.log("Maluem");
 	if (type==0 || type == -1) return;
+	//console.log(type);
 	var toAdd = {
 		x : center.x-playerPosition.x,
 		y : center.y-playerPosition.y

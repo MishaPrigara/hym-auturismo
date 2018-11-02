@@ -1,6 +1,6 @@
 // CONSTANTS
-var GAMELENGTH = 120;
-var NEEDPLAYERS=2;
+var GAMELENGTH = 180;
+var NEEDPLAYERS=4;
 // VARIABLES
 
 var express = require('express');
@@ -11,6 +11,7 @@ var groupIds = {};
 var time = {};
 var timerId = {};
 var playerPosition = {};
+var players = {};
 var app = express();
 var died = {};
 var timer = 115;
@@ -20,6 +21,7 @@ var id = 0;
 var groupTime = [];
 var groupNames = [];
 var timerIds = [];
+var playerId = {};
 // var SOCKETS = {};
 
 app.use(express.static('public'));
@@ -31,12 +33,27 @@ var io = socket(server);
 
 io.sockets.on('connection', newConnection);
 
+function sqr(x){
+	return x*x;
+}
 function find(arr,value){
 	for (var i=0; i<arr.length; i++){
 		if (arr[i]==value) return i;
 	}
 	return -1;
-
+}
+function insert(arr, value){
+	for (var i=0; i<arr.length; i++){
+		if (!arr[i]){
+			arr[i]=value;
+			return i;
+		}
+	}
+	arr.push(value);
+	return arr.length-1;
+}
+function dist(x1,y1,x2,y2){
+	return Math.sqrt(sqr(x1-x2)+sqr(y1-y2));
 }
 
 function newConnection(socket) {
@@ -49,9 +66,9 @@ function newConnection(socket) {
 			groupIds[user.groupName] = [];
 			pass[user.groupName] = user.pass;
 			saved[user.groupName] = null;
-			groupNames.push(user.groupName);
-			groupTime.push(GAMELENGTH);
-			var id = groupTime.length-1;
+			var id=insert(groupNames,user.groupName);
+			groupTime[id]=GAMELENGTH;
+			players[id] = [];
 			var curGroup = user.groupName;
 			timerIds[id]=setInterval(function decrease(){
 				groupTime[id]-=(groupIds[curGroup].length==NEEDPLAYERS);
@@ -67,10 +84,22 @@ function newConnection(socket) {
       }
 			users[socket.id] = user.groupName;
 			groupIds[user.groupName].push(socket);
-			playerPosition[socket.id] = {
-				x : 0,
-				y : 0
-			};
+			var id = find(groupNames,users[socket.id]);
+			if (id==-1) console.log("ERROR");
+			for (var i=0; i<NEEDPLAYERS; i++){
+				if (!players[id][i]){
+					players[id][i]= {
+						x : 0,
+						y : 0,
+						type : 0,
+						dir : 0,
+						locked : 0,
+						id : 0
+					};
+					playerId[socket.id]=i;
+					break;
+				}
+			}
 		}
 		if(pass[user.groupName] === user.pass) {
       console.log("Somebody joined " + user.groupName + " maybe his name is " + socket.id);
@@ -93,13 +122,15 @@ function newConnection(socket) {
 		if(users[socket.id] !== null && groupIds[users[socket.id]]) {
 			console.log("Somebody left " + users[socket.id]);
 	    var index = groupIds[users[socket.id]].indexOf(socket);
+			var currentGroupIndex = find(groupNames,users[socket.id]);
 			if(index > -1) {
 				groupIds[users[socket.id]].splice(index, 1);
+				players[currentGroupIndex][playerId[socket.id]]=false;
 			}
 			if(!groupIds[users[socket.id]].length) {
 				console.log("Deleted");
 				pass[users[socket.id]] = null;
-				groupNames.splice(find(groupNames,))
+				groupNames.splice(find(groupNames,users[socket.id]),1);
 			}
 			console.log("Now size of " + users[socket.id] + " is " + groupIds[users[socket.id]].length);
 			users[socket.id] = null;
@@ -141,31 +172,54 @@ function newConnection(socket) {
 
   socket.on('playerPosition', receivePostion);
 
-  function receivePostion(curPlayerPosition) {
+  function receivePostion(receivedPlayer) {
     // console.log(curPlayerPosition.x + " " + curPlayerPosition.y + " received from " + socket.id);
-    playerPosition[socket.id] = curPlayerPosition;
     var currentGroup = groupIds[users[socket.id]];
-    var currentPlayersPositions = [];
-    if(!currentGroup || !currentGroup.length)return;
+		var data = [];
+		if(!currentGroup || !currentGroup.length)return;
+		/// CALCULATING TIME ///
 		var currentGroupIndex=find(groupNames,users[socket.id]);
 		console.log(currentGroupIndex + " " + users[socket.id]);
 		console.log(groupTime[currentGroupIndex]);
 		var lock=1;
-		if (groupTime[currentGroupIndex]==0){
-			lock=-1;
+		if (currentGroup.length == NEEDPLAYERS){
+			lock = 0;
+			//console.log("DA");
 		}
-    for(var i = 0; i < currentGroup.length; i++) {
-      var newData = {
-        x : playerPosition[currentGroup[i].id].x,
-        y : playerPosition[currentGroup[i].id].y,
-        type : playerPosition[currentGroup[i].id].type,
-        name : users[currentGroup[i].id],
-        dir : playerPosition[currentGroup[i].id].dir,
-				locked : Math.min(lock,playerPosition[currentGroup[id].id].locked)
-      };
-      currentPlayersPositions.push(newData);
-    }
-    socket.emit('receivePositions', currentPlayersPositions);
+		var cntAlive=0;
+		for (var i = 0 ; i < players[currentGroupIndex].length; i++){
+			cntAlive+=(players[currentGroupIndex][i].type>0);
+		}
+		if (groupTime[currentGroupIndex]==0 || (cntAlive==1 && groupTime[currentGroupIndex]<GAMELENGTH)){
+			lock=-1;
+			groupTime[currentGroupIndex]=1;
+		}
+		var prevtype = players[currentGroupIndex][receivedPlayer.id]=receivedPlayer.type;
+		players[currentGroupIndex][receivedPlayer.id] = receivedPlayer;
+		receivedPlayer.type=prevtype;
+		//console.log("RECEIVED COORDS FROM " + receivedPlayer.id);
+		for (var i = 0; i < players[currentGroupIndex].length ; i++){
+			var newData = players[currentGroupIndex][i];
+			newData.name = users[socket.id];
+			newData.locked = lock;
+			//console.log("LOCK of " + receivedPlayer.id + " = " + lock);
+			data.push(newData);
+
+		}
+		/// CHECKING COLLISION WITH STOROZH ///
+		for (var i = 0; i < data.length; i++){
+			for (var j = 0; j < data.length; j++){
+				if (i==j) continue;
+				if (data[i].type==1 && data[j].type>=2){
+					if (dist(data[i].x,data[i].y,
+						data[j].x,data[j].y)<50){
+							data[j].type=-1;
+							players[currentGroupIndex][j].type = -1;
+						}
+				}
+			}
+		}
+    socket.emit('receivePositions', data);
 		socket.emit('receiveTime',groupTime[currentGroupIndex]);
 
   }
