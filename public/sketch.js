@@ -1,7 +1,7 @@
 // CONSTANS
 var NEEDPLAYERS=3;
 // VARIABLES
-
+var connected=0;
 var socket;
 var r = 30;
 var fr = 30;
@@ -26,6 +26,7 @@ var prevWidth = 0, prevHeight = 0;
 var player = {
 	speed: 16
 };
+var allPlayers;
 
 function keypressed() {
 	if(event.key === 'Enter') {
@@ -54,7 +55,9 @@ function processLogin(ok) {
 function preload(){
 
 	font = loadFont('assets/OCRAEXT.TTF');
-	socket = io.connect('http://192.168.1.13:3000');
+	var connectTo=document.URL;
+	socket = io.connect(connectTo);
+
 	guy[0] = [];
 	guy[1] = [loadImage("assets/storozh1_LEFT.png"),  loadImage("assets/storozh1_DOWN.png"),
 						loadImage("assets/storozh1_RIGHT.png"), loadImage("assets/storozh1_UP.png")];
@@ -128,15 +131,7 @@ function setup() {
 		x : 0,
 		y : 0
 	};
-	playerPosition = {
-		x : 1000,
-		y : 1000,
-		type: 1,
-		dir : 3,
-		locked : 1,
-		name : user.getGroupName(),
-		id : 0
-	};
+	playerPosition.name = user.getGroupName();
 
 	background_song.play();
 
@@ -185,38 +180,43 @@ function intersect(newPosition, velocity, a,b,c,d) {
 function isPlaying(audio) {
 	return !audio.paused;
 }
+function textDraw(){
+	/// TEXT DRAW ///
 
-function draw() {
-		//console.log("DA1");
-	if(!user.isLogged() || timeEnd || !board) return;
-
-
-	//	console.log("DA2");
-	if (playerPosition.type==0) return;
-	// background(0);
-	if(!isPlaying(background_song)) {
-		background_song.currentTime = 0;
-		background_song.play();
+	textAlign(CENTER);
+	if(playerPosition.locked == -1) {
+		drawWords("GAME OVER", width * .5);
+	} else if(!playerPosition.locked) {
+	  drawWords("" + timer, width * .5 );
+	} else {
+		var joined = 0;
+		if (allPlayers)
+			joined = allPlayers.length;
+		waitForOthers = "Waiting for other players to join (" + joined + "/" + NEEDPLAYERS + ")";
+		drawWords(waitForOthers, width * .5);
 	}
+}
+function move(){
+	if (board){
+		for(var i = 0; i < board.length; i++) {
+			var a=board[i][0];
+			var b=board[i][1];
+			var c=board[i][2];
+			var d=board[i][3];
 
-	for(var i = 0; i < board.length; i++) {
-		var a=board[i][0];
-		var b=board[i][1];
-		var c=board[i][2];
-		var d=board[i][3];
-
-		if(playerPosition.locked) {
-			socket.emit('playerPosition', playerPosition);
-			return;
-		}
-		if(intersect(playerPosition, velocity, a,b,c,d)) {
-			playerPosition.x -= velocity.x;
-			playerPosition.y -= velocity.y;
-			socket.emit('playerPosition', playerPosition);
-			return;
-		} else {
-			playerPosition.x -= velocity.x;
-			playerPosition.y -= velocity.y;
+			if(playerPosition.locked) {
+				socket.emit('playerPosition', playerPosition);
+				return;
+			}
+			if(intersect(playerPosition, velocity, a,b,c,d)) {
+				playerPosition.x -= velocity.x;
+				playerPosition.y -= velocity.y;
+				socket.emit('playerPosition', playerPosition);
+				return;
+			} else {
+				playerPosition.x -= velocity.x;
+				playerPosition.y -= velocity.y;
+			}
 		}
 	}
 
@@ -224,6 +224,45 @@ function draw() {
 	playerPosition.y += velocity.y;
 
 	socket.emit('playerPosition', playerPosition);
+}
+function fieldOfView(){
+	if (playerPosition.type!=1 && playerPosition.type!=-1){
+		image(shadow,center.x - center.y, 0 , center.y*2,center.y*2);
+		fill(0,0,0);
+		rect(0,0,center.x-center.y + 50,center.y*2);
+		rect(center.x-center.y+center.y*2 - 50,0,center.x-center.y+200,center.y*2);
+	}
+}
+function draw() {
+		//console.log("DA1");
+	if(!user.isLogged() || timeEnd) return;
+	if (!isFinite(playerPosition.x)){
+		socket.emit("getGroupSize",key);
+	}
+	clear();
+	/// BACKGROUND FILL ///
+	fill(159, 163, 165);
+	rect(0, 0, windowWidth, windowHeight);
+	/// MAP DRAW ///
+	if (board && board.length){
+		for(var i = 0; i < board.length; i++) {
+			drawObj(5, i, i, 0);
+		}
+	}
+
+	if(!isPlaying(background_song)) {
+		background_song.currentTime = 0;
+		background_song.play();
+	}
+	if (allPlayers && allPlayers.length){
+		for(var i = 0; i < allPlayers.length; i++) {
+			if (!allPlayers[i])continue;
+			drawObj(allPlayers[i].type, allPlayers[i].y, allPlayers[i].x, allPlayers[i].dir);
+		}
+	}
+	fieldOfView();
+	textDraw();
+	move();
 
 
 }
@@ -236,68 +275,11 @@ function drawWords(words, x) {
   text(words, x, 80);
 
 }
-function initDraw(data){
-
-	if(user.getGroupName() != data[0].name)return;
-	clear();
-
-	playerPosition=data[playerPosition.id];
-
-	/// BACKGROUND FILL ///
-
-	fill(159, 163, 165);
-	rect(0, 0, windowWidth, windowHeight);
-
-	/// MAP DRAWING ///
-
-	for(var i = 0; i < board.length; i++) {
-		drawObj(5, i, i, 0);
-	}
-	for(var i = 0; i < data.length; i++) {
-		if (!data[i])continue;
-		drawObj(data[i].type, data[i].y, data[i].x, data[i].dir);
-	}
-
-	/// DRAWING FIELD OF VIEW OF STUDENT ///
-
-	if (playerPosition.type!=1 && playerPosition.type!=-1){
-		image(shadow,center.x - center.y, 0 , center.y*2,center.y*2);
-		fill(0,0,0);
-		rect(0,0,center.x-center.y + 50,center.y*2);
-		rect(center.x-center.y+center.y*2 - 50,0,center.x-center.y+200,center.y*2);
-	}
-
-	/// GAME LOGIC ///
-	/*var cnt=data.length;
-	var cntLockedBeforeStart=0;
-	var cntLockedAfterStart=0;
-	var cntAlive=0;
-	for (var i=0; i < data.length; i++){
-		cntLockedBeforeStart+=(data[i].locked==1);
-		cntAlive+=(data[i].type!=-1);
-		cntLockedAfterStart+=(data[i].locked==-1);
-	}
-	if (cntLockedBeforeStart>0 && cnt==NEEDPLAYERS){
-		playerPosition.locked=0;
-	}
-	if ((cntAlive==1 && cntLockedBeforeStart==0) || cntLockedAfterStart==NEEDPLAYERS){
-		playerPosition.locked=-1;
-	}
-	*/
-
-	/// TEXT DRAW ///
-
-	textAlign(CENTER);
-	if(playerPosition.locked == -1) {
-		drawWords("GAME OVER", width * .5);
-	} else if(!playerPosition.locked) {
-	  drawWords("" + timer, width * .5 );
-	} else {
-		var joined=data.length;
-		waitForOthers = "Wait for other players to join (" + joined + "/" + NEEDPLAYERS + ")";
-		drawWords(waitForOthers, width * .5);
-	}
-
+function initDraw(newData){
+	if(user.getGroupName() != newData[playerPosition.id].name)return;
+	allPlayers = newData;
+	playerPosition.locked = newData[playerPosition.id].locked;
+	playerPosition.type = newData[playerPosition.id].type;
 }
 function drawObj(type, i, j, direction) {
 	// console.log("Maluem");

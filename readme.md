@@ -1,4 +1,24 @@
 WANTED.
+
+commit notes(03.11.18 22:45)
+
+1) can be put on server
+2) if storozh disconnect, the game will be overed
+3) removed lags if the connection is not stable
+4) rewritten sketch.js, mostly draw function
+5) removed a bug when initialization was not successfull
+6) added gameStates[] in server.js
+
+BUGS
+
+TODO
+
+1) REALIZE SPAWN KEYS RANDOMLY ON THE MAP AND SPAWN RANDOMLY A DOOR
+\n...
+
+2) ADD NEW LEVELS
+
+/---OUTDATED---/
 commit notes (03.11.18):
 -player cannot reconnect and become alive
 -player reconnect as dead
@@ -8,20 +28,19 @@ commit notes (03.11.18):
  (server sends player his parameters but not player determines them himself)
 
 BUGS
-1) IF STOROZH LEAVES = ALL PLAYERS STUCK
+1) IF STOROZH LEAVES = ALL PLAYERS STUCK [FIXED]
 
 TODO
-1) REALIZE GAMESTATE ARRAY TO EASILY SEND TO CLIENTS AN INFORMATION ABOUT GAME STATE
+1) REALIZE GAMESTATE ARRAY TO EASILY SEND TO CLIENTS AN INFORMATION ABOUT GAME STATE [DONE 1/2]
 ...
 
-1.5) PUT THE GAME ONTO SERVER (MAKE SERVER WORK STABLE WITHOUT RANDOM BUGS)
+1.5) PUT THE GAME ONTO SERVER (MAKE SERVER WORK STABLE WITHOUT RANDOM BUGS) [DONE 1/2]
 2) REALIZE SPAWN KEYS RANDOMLY ON THE MAP AND SPAWN RANDOMLY A DOOR
 ...
 
 3) ADD NEW LEVELS
 
 
-/---OUTDATED---/
 
 commit notes (02.11.18):
 -almost fully rewritten server.js

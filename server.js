@@ -1,5 +1,5 @@
 // CONSTANTS
-var GAMELENGTH = 30;
+var GAMELENGTH = 180;
 var NEEDPLAYERS=3;
 // VARIABLES
 
@@ -16,12 +16,13 @@ var app = express();
 var died = {};
 var timer = 115;
 var cnt = {};
-var server = app.listen(3000);
+var server = app.listen(3005);
 var id = 0;
 var groupTime = [];
 var groupNames = [];
 var timerIds = [];
 var playerId = {};
+var gameStates = [];
 // var SOCKETS = {};
 
 app.use(express.static('public'));
@@ -67,9 +68,16 @@ function gameState(groupName){
 	return "STANDBY";
 
 }
+
+
 function newConnection(socket) {
 	// socket.loged = false;
 	// SOCKETS[socket.id] = socket;
+
+
+
+
+
 	socket.on('checkLogin', checkLogin);
 
 	function checkLogin(user) {
@@ -80,12 +88,14 @@ function newConnection(socket) {
 			var id=insert(groupNames,user.groupName);
 			console.log("FOUND PLACE FOR " + user.groupName + " : " + id);
 			groupTime[id]=GAMELENGTH;
+			gameStates[id]="STANDBY";
+			console.log(gameStates[id]);
 			players[id] = [];
 			var curGroup = user.groupName;
 			timerIds[id]=setInterval(function decrease(){
 				groupTime[id]-=(gameState(user.groupName)==="RUNNING");
-				console.log(id + " " + groupTime[id]);
-				if (groupTime[id]<=0) clearTimeout(timerIds[id]);
+				console.log(user.groupName + " " + groupTime[id]);
+				if (groupTime[id]<=0 || !groupIds[user.groupName].length) clearTimeout(timerIds[id]);
 			},1000, id, curGroup);
 		}
 
@@ -98,6 +108,7 @@ function newConnection(socket) {
 			groupIds[user.groupName].push(socket);
 			var id = find(groupNames,users[socket.id]);
 			if (id==-1) console.log("ERROR");
+			console.log(gameStates[id]);
 			for (var i=0; i<NEEDPLAYERS; i++){
 				if (!players[id][i]){
 					console.log("FOUND PLACE FOR " + socket.id + " " + i);
@@ -113,13 +124,16 @@ function newConnection(socket) {
 						players[id][i].x=660;
 						players[id][i].y=4070;
 					}
-					if (gameState(users[socket.id]) != "STANDBY"){
+					if (gameStates[id] === "RUNNING"){
 						players[id][i].type=-1;
-						console.log(gameState(users[socket.id]));
+						console.log("GAME IS IN PROGRESS, " + socket.id +" spawned as DEAD");
 					}
 					playerId[socket.id]=i;
 					break;
 				}
+			}
+			if (groupIds[user.groupName].length===NEEDPLAYERS && gameStates[id]==="STANDBY"){
+				gameStates[id]="RUNNING";
 			}
 		}
 		if(pass[user.groupName] === user.pass) {
@@ -147,11 +161,16 @@ function newConnection(socket) {
 			if(index > -1) {
 				groupIds[users[socket.id]].splice(index, 1);
 				players[currentGroupIndex][playerId[socket.id]]=false;
+				if (playerId[socket.id]===0){
+					gameStates[currentGroupIndex]="OVER";
+				}
 			}
 			if(!groupIds[users[socket.id]].length) {
 				console.log("Deleted");
 				pass[users[socket.id]] = null;
-				groupNames.splice(find(groupNames,users[socket.id]),1);
+				var id=find(groupNames,users[socket.id]);
+				groupNames.splice(id,1);
+				gameStates.splice(id,1);
 			}
 			console.log("Now size of " + users[socket.id] + " is " + groupIds[users[socket.id]].length);
 			users[socket.id] = null;
@@ -210,22 +229,21 @@ function newConnection(socket) {
 		/// CALCULATING TIME ///
 		var currentGroupIndex=find(groupNames,users[socket.id]);
 		var lock = 1;
-		if (gameState(users[socket.id])==="RUNNING"){
+		if (gameStates[currentGroupIndex]=="RUNNING"){
 			lock = 0;
-		}
-		if (currentGroup.length == NEEDPLAYERS){
-			lock = 0;
-			//console.log("DA");
 		}
 		var cntAlive=0;
 		for (var i = 0 ; i < players[currentGroupIndex].length; i++){
 			cntAlive+=(players[currentGroupIndex][i].type>0);
 		}
-		if (groupTime[currentGroupIndex]==0 || (cntAlive==1 && groupTime[currentGroupIndex]<GAMELENGTH) ||
-				!players[currentGroupIndex][0]){
-			lock=-1;
-			groupTime[currentGroupIndex]=0;
+		if (gameStates[currentGroupIndex]=="RUNNING"){
+			if (groupTime[currentGroupIndex]==0 || (cntAlive==1 && groupTime[currentGroupIndex]<GAMELENGTH)){
+				groupTime[currentGroupIndex]=0;
+				gameStates[currentGroupIndex]="OVER";
+			}
 		}
+		if (gameStates[currentGroupIndex]==="OVER")lock=-1;
+
 		var prevtype = players[currentGroupIndex][receivedPlayer.id]=receivedPlayer.type;
 		players[currentGroupIndex][receivedPlayer.id] = receivedPlayer;
 		receivedPlayer.type=prevtype;
