@@ -1,5 +1,5 @@
 // CONSTANS
-var NEEDPLAYERS=4;
+var NEEDPLAYERS=3;
 // VARIABLES
 
 var socket;
@@ -101,15 +101,17 @@ function setup() {
 		//console.log("SECOND " + data.key + " got " + data.size);
 		if(data.key === key) joined = data.size;
 		if (data.key === key){
-			playerPosition.type = data.size;
-			console.log("DATA SZ = " + data.size + "TYPE = " +playerPosition.type);
-			playerPosition.id = data.size - 1;
-			if (playerPosition.type === 1){
-				playerPosition.x=660;
-				playerPosition.y=4070;
-				player.speed=15;
-			}
+			joined = data.size;
 			board = data.lvl;
+			playerPosition.x = data.x;
+			playerPosition.y = data.y;
+			playerPosition.type = data.type;
+			playerPosition.dir = data.dir;
+			playerPosition.locked = data.locked;
+			playerPosition.id = data.id;
+			if (playerPosition.type == 1){
+				player.speed = 15;
+			}
 		}
 	});
 
@@ -117,6 +119,7 @@ function setup() {
 	socket.on('loggedIn', function(data) {
 		user.setLogged(data);
 		processLogin(data);
+		if (data)
 		socket.emit('getGroupSize', key);
 	});
 
@@ -251,6 +254,7 @@ function initDraw(data){
 		drawObj(5, i, i, 0);
 	}
 	for(var i = 0; i < data.length; i++) {
+		if (!data[i])continue;
 		drawObj(data[i].type, data[i].y, data[i].x, data[i].dir);
 	}
 

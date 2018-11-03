@@ -1,6 +1,6 @@
 // CONSTANTS
-var GAMELENGTH = 180;
-var NEEDPLAYERS=4;
+var GAMELENGTH = 30;
+var NEEDPLAYERS=3;
 // VARIABLES
 
 var express = require('express');
@@ -56,6 +56,17 @@ function dist(x1,y1,x2,y2){
 	return Math.sqrt(sqr(x1-x2)+sqr(y1-y2));
 }
 
+function gameState(groupName){
+	var id = find(groupNames,groupName);
+	if (!players[id]) return "STANDBY";
+	for (var i=0; i<NEEDPLAYERS; i++){
+		if (!players[id][i]) continue;
+		if (players[id][i].locked === 0) return "RUNNING";
+		if (players[id][i].locked === -1) return "OVER";
+	}
+	return "STANDBY";
+
+}
 function newConnection(socket) {
 	// socket.loged = false;
 	// SOCKETS[socket.id] = socket;
@@ -67,13 +78,14 @@ function newConnection(socket) {
 			pass[user.groupName] = user.pass;
 			saved[user.groupName] = null;
 			var id=insert(groupNames,user.groupName);
+			console.log("FOUND PLACE FOR " + user.groupName + " : " + id);
 			groupTime[id]=GAMELENGTH;
 			players[id] = [];
 			var curGroup = user.groupName;
 			timerIds[id]=setInterval(function decrease(){
-				groupTime[id]-=(groupIds[curGroup].length==NEEDPLAYERS);
+				groupTime[id]-=(gameState(user.groupName)==="RUNNING");
 				console.log(id + " " + groupTime[id]);
-				if (groupTime[id]==0) clearTimeout(timerIds[id]);
+				if (groupTime[id]<=0) clearTimeout(timerIds[id]);
 			},1000, id, curGroup);
 		}
 
@@ -88,14 +100,23 @@ function newConnection(socket) {
 			if (id==-1) console.log("ERROR");
 			for (var i=0; i<NEEDPLAYERS; i++){
 				if (!players[id][i]){
+					console.log("FOUND PLACE FOR " + socket.id + " " + i);
 					players[id][i]= {
-						x : 0,
-						y : 0,
-						type : 0,
-						dir : 0,
-						locked : 0,
-						id : 0
+						x : 1000,
+						y : 1000,
+						type : i+1,
+						dir : 3,
+						locked : 1,
+						id : i
 					};
+					if (i==0){
+						players[id][i].x=660;
+						players[id][i].y=4070;
+					}
+					if (gameState(users[socket.id]) != "STANDBY"){
+						players[id][i].type=-1;
+						console.log(gameState(users[socket.id]));
+					}
 					playerId[socket.id]=i;
 					break;
 				}
@@ -157,10 +178,19 @@ function newConnection(socket) {
       }
       // console.log(st);
     }
+		var currentGroupIndex=find(groupNames,users[socket.id]);
+		var playerIndex = playerId[socket.id];
     var res = {
       size :sz,
       key : key,
-      lvl : arr
+      lvl : arr,
+			type: players[currentGroupIndex][playerIndex].type,
+			x : players[currentGroupIndex][playerIndex].x,
+			y : players[currentGroupIndex][playerIndex].y,
+			dir : players[currentGroupIndex][playerIndex].dir,
+			locked : players[currentGroupIndex][playerIndex].locked,
+			id : players[currentGroupIndex][playerIndex].id
+
     };
     socket.emit('receiveGroupSize', res);
   });
@@ -179,9 +209,10 @@ function newConnection(socket) {
 		if(!currentGroup || !currentGroup.length)return;
 		/// CALCULATING TIME ///
 		var currentGroupIndex=find(groupNames,users[socket.id]);
-		console.log(currentGroupIndex + " " + users[socket.id]);
-		console.log(groupTime[currentGroupIndex]);
-		var lock=1;
+		var lock = 1;
+		if (gameState(users[socket.id])==="RUNNING"){
+			lock = 0;
+		}
 		if (currentGroup.length == NEEDPLAYERS){
 			lock = 0;
 			//console.log("DA");
@@ -190,9 +221,10 @@ function newConnection(socket) {
 		for (var i = 0 ; i < players[currentGroupIndex].length; i++){
 			cntAlive+=(players[currentGroupIndex][i].type>0);
 		}
-		if (groupTime[currentGroupIndex]==0 || (cntAlive==1 && groupTime[currentGroupIndex]<GAMELENGTH)){
+		if (groupTime[currentGroupIndex]==0 || (cntAlive==1 && groupTime[currentGroupIndex]<GAMELENGTH) ||
+				!players[currentGroupIndex][0]){
 			lock=-1;
-			groupTime[currentGroupIndex]=1;
+			groupTime[currentGroupIndex]=0;
 		}
 		var prevtype = players[currentGroupIndex][receivedPlayer.id]=receivedPlayer.type;
 		players[currentGroupIndex][receivedPlayer.id] = receivedPlayer;
