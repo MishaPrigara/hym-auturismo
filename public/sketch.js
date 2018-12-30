@@ -1,5 +1,5 @@
 // CONSTANS
-var NEEDPLAYERS=3;
+var NEEDPLAYERS=2;
 // VARIABLES
 var connected=0;
 var socket;
@@ -24,7 +24,7 @@ var key = 0;
 var firstReceive = false;
 var prevWidth = 0, prevHeight = 0;
 var player = {
-	speed: 16
+	speed: 15
 };
 var allPlayers;
 
@@ -72,6 +72,15 @@ function preload(){
 						loadImage("assets/guy3_RIGHT.png"), loadImage("assets/guy3_UP.png")];
 
 	shadow = loadImage("assets/shadow.png");
+}
+function fullScreen(element) {
+  if(element.requestFullscreen) {
+    element.requestFullscreen();
+  } else if(element.webkitrequestFullscreen) {
+    element.webkitRequestFullscreen();
+  } else if(element.mozRequestFullscreen) {
+    element.mozRequestFullScreen();
+  }
 }
 function setup() {
 	// console.log(frameRate());
@@ -123,7 +132,9 @@ function setup() {
 		user.setLogged(data);
 		processLogin(data);
 		if (data)
-		socket.emit('getGroupSize', key);
+		{
+			socket.emit('getGroupSize', key);
+		}
 	});
 
 
@@ -339,26 +350,50 @@ function drawObj(type, i, j, direction) {
 }
 
 function keyReleased() {
-	if (keyCode === LEFT_ARROW){
+	if (keyCode === LEFT_ARROW || keyCode === 65){
 		velocity.x+=player.speed;
-	} else if (keyCode === RIGHT_ARROW){
+	} else if (keyCode === RIGHT_ARROW || keyCode === 68){
 		velocity.x-=player.speed;
-	} else if (keyCode === UP_ARROW){
+	} else if (keyCode === UP_ARROW || keyCode === 87){
 		velocity.y+=player.speed;
-	} else if (keyCode === DOWN_ARROW){
+	} else if (keyCode === DOWN_ARROW || keyCode === 83){
 		velocity.y-=player.speed;
 	}
 
 }
-
+function touchStarted(){
+	if (!isFinite(playerPosition.x) || playerPosition.locked) return false;
+	console.log(mouseX,mouseY);
+	if (mouseX<windowWidth/3){
+		velocity.x-=player.speed;
+	}
+	if (mouseX>2*windowWidth/3){
+		velocity.x+=player.speed;
+	}
+	if (mouseY<windowHeight/3){
+		velocity.y-=player.speed;
+	}
+	if (mouseY>2*windowHeight/3){
+		velocity.y+=player.speed;
+	}
+	return false;
+}
+function touchEnded(){
+	velocity.x=0;
+	velocity.y=0;
+}
+function touchMoved(){
+	touchEnded();
+	touchStarted();
+}
 function keyPressed() {
-  if (keyCode === LEFT_ARROW) {
+  if (keyCode === LEFT_ARROW || keyCode === 65) {
     velocity.x += -player.speed;
-  } else if (keyCode === RIGHT_ARROW) {
+  } else if (keyCode === RIGHT_ARROW || keyCode === 68) {
     velocity.x += player.speed;
-  } else if (keyCode === UP_ARROW){
+  } else if (keyCode === UP_ARROW || keyCode === 87){
 		velocity.y += -player.speed;
-	} else if (keyCode === DOWN_ARROW){
+	} else if (keyCode === DOWN_ARROW || keyCode === 83){
 		velocity.y += player.speed;
 	}
 }

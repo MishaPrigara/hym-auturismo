@@ -1,6 +1,6 @@
 // CONSTANTS
-var GAMELENGTH = 180;
-var NEEDPLAYERS=3;
+var GAMELENGTH = 120;
+var NEEDPLAYERS=2;
 // VARIABLES
 
 var express = require('express');
