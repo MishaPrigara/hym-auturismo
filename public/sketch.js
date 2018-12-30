@@ -1,3 +1,7 @@
+// CONSTANS
+var NEEDPLAYERS=2;
+// VARIABLES
+var connected=0;
 var socket;
 var r = 30;
 var fr = 30;
@@ -14,11 +18,15 @@ var shadow;
 var storozh_it = 0;
 var font, fontsize = 40;
 var timeEnd = false;
-var waitForOthers = "Wait for other players to join";
+var waitForOthers = "Waiting for other players to join";
 var joined = 0;
 var key = 0;
 var firstReceive = false;
 var prevWidth = 0, prevHeight = 0;
+var player = {
+	speed: 15
+};
+var allPlayers;
 
 function keypressed() {
 	if(event.key === 'Enter') {
@@ -47,7 +55,9 @@ function processLogin(ok) {
 function preload(){
 
 	font = loadFont('assets/OCRAEXT.TTF');
-	socket = io.connect('http://localhost:3000/');
+	var connectTo=document.URL;
+	socket = io.connect(connectTo);
+
 	guy[0] = [];
 	guy[1] = [loadImage("assets/storozh1_LEFT.png"),  loadImage("assets/storozh1_DOWN.png"),
 						loadImage("assets/storozh1_RIGHT.png"), loadImage("assets/storozh1_UP.png")];
@@ -62,6 +72,15 @@ function preload(){
 						loadImage("assets/guy3_RIGHT.png"), loadImage("assets/guy3_UP.png")];
 
 	shadow = loadImage("assets/shadow.png");
+}
+function fullScreen(element) {
+  if(element.requestFullscreen) {
+    element.requestFullscreen();
+  } else if(element.webkitrequestFullscreen) {
+    element.webkitRequestFullscreen();
+  } else if(element.mozRequestFullscreen) {
+    element.mozRequestFullScreen();
+  }
 }
 function setup() {
 	// console.log(frameRate());
@@ -93,21 +112,29 @@ function setup() {
 	socket.on('receiveGroupSize', function (data){
 		//console.log("SECOND " + data.key + " got " + data.size);
 		if(data.key === key) joined = data.size;
-		if (data.key === key && !firstReceive){
-			firstReceive = true;
-			playerPosition.type = data.size;
-			if (playerPosition.type === 1){
-				playerPosition.x=660;
-				playerPosition.y=4070;
-			}
+		if (data.key === key){
+			joined = data.size;
 			board = data.lvl;
+			playerPosition.x = data.x;
+			playerPosition.y = data.y;
+			playerPosition.type = data.type;
+			playerPosition.dir = data.dir;
+			playerPosition.locked = data.locked;
+			playerPosition.id = data.id;
+			if (playerPosition.type == 1){
+				player.speed = 15;
+			}
 		}
 	});
+
 	socket.on('checkedLogin', processLogin);
 	socket.on('loggedIn', function(data) {
 		user.setLogged(data);
 		processLogin(data);
-		socket.emit('getGroupSize', key);
+		if (data)
+		{
+			socket.emit('getGroupSize', key);
+		}
 	});
 
 
@@ -115,46 +142,15 @@ function setup() {
 		x : 0,
 		y : 0
 	};
-	playerPosition = {
-		x : 1000,
-		y : 1000,
-		type: 0,
-		dir : 3,
-		locked : 1,
-		name : user.getGroupName()
-	};
+	playerPosition.name = user.getGroupName();
 
 	background_song.play();
 
 	socket.on('receivePositions', initDraw);
-	socket.on('getCnt', cnt);
-	socket.on('updateTime', function (data) {
-		//console.log("received" + data.name + " " + data.time);
-		if(user.getGroupName() === data.name) {
-			timer = data.time;
-			if(timer == 0) {
-				playerPosition.locked = -1;
-				timeEnd = true;
-			}
-		}
+	socket.on('receiveTime',function(data){
+		timer=data;
 	});
 
-}
-function cnt(data){
-	if (user.getGroupName()==data[0].name){
-		var was = playerPosition.locked;
-		for (var i=0; i<data.length; i++){
-			playerPosition.locked=data[i].locked;
-		}
-		if(was != playerPosition.locked) {
-			var newData = {
-				name : user.getGroupName(),
-				type : playerPosition.type
-			};
-			socket.emit('startTimer', newData);
-		}
-
-	}
 }
 function sqr(x) {
 	return x * x;
@@ -195,13 +191,8 @@ function intersect(newPosition, velocity, a,b,c,d) {
 function isPlaying(audio) {
 	return !audio.paused;
 }
-
-function draw() {
-
-
-		//console.log("DA1");
-	if(!user.isLogged() || timeEnd) return;
-
+function textDraw(){
+	/// TEXT DRAW ///
 
 	textAlign(CENTER);
 	if(playerPosition.locked == -1) {
@@ -209,38 +200,34 @@ function draw() {
 	} else if(!playerPosition.locked) {
 	  drawWords("" + timer, width * .5 );
 	} else {
-		key = Math.random();
-		socket.emit('getGroupSize', key);
-		waitForOthers = "Wait for other players to join (" + joined + "/4)";
+		var joined = 0;
+		if (allPlayers)
+			joined = allPlayers.length;
+		waitForOthers = "Waiting for other players to join (" + joined + "/" + NEEDPLAYERS + ")";
 		drawWords(waitForOthers, width * .5);
 	}
-	//	console.log("DA2");
-	if (playerPosition.type==0) return;
-	// background(0);
-	if(!isPlaying(background_song)) {
-		background_song.currentTime = 0;
-		background_song.play();
-	}
+}
+function move(){
+	if (board){
+		for(var i = 0; i < board.length; i++) {
+			var a=board[i][0];
+			var b=board[i][1];
+			var c=board[i][2];
+			var d=board[i][3];
 
-	for(var i = 0; i < board.length; i++) {
-		var a=board[i][0];
-		var b=board[i][1];
-		var c=board[i][2];
-		var d=board[i][3];
-
-		if(playerPosition.locked) {
-			//console.log("DA");
-			socket.emit('sendCnt',playerPosition);
-			socket.emit('playerPosition', playerPosition);
-			return;
-		}
-		if(intersect(playerPosition, velocity, a,b,c,d)) {
-			playerPosition.x -= velocity.x;
-			playerPosition.y -= velocity.y;
-			return;
-		} else {
-			playerPosition.x -= velocity.x;
-			playerPosition.y -= velocity.y;
+			if(playerPosition.locked) {
+				socket.emit('playerPosition', playerPosition);
+				return;
+			}
+			if(intersect(playerPosition, velocity, a,b,c,d)) {
+				playerPosition.x -= velocity.x;
+				playerPosition.y -= velocity.y;
+				socket.emit('playerPosition', playerPosition);
+				return;
+			} else {
+				playerPosition.x -= velocity.x;
+				playerPosition.y -= velocity.y;
+			}
 		}
 	}
 
@@ -248,6 +235,45 @@ function draw() {
 	playerPosition.y += velocity.y;
 
 	socket.emit('playerPosition', playerPosition);
+}
+function fieldOfView(){
+	if (playerPosition.type!=1 && playerPosition.type!=-1){
+		image(shadow,center.x - center.y, 0 , center.y*2,center.y*2);
+		fill(0,0,0);
+		rect(0,0,center.x-center.y + 50,center.y*2);
+		rect(center.x-center.y+center.y*2 - 50,0,center.x-center.y+200,center.y*2);
+	}
+}
+function draw() {
+		//console.log("DA1");
+	if(!user.isLogged() || timeEnd) return;
+	if (!isFinite(playerPosition.x)){
+		socket.emit("getGroupSize",key);
+	}
+	clear();
+	/// BACKGROUND FILL ///
+	fill(159, 163, 165);
+	rect(0, 0, windowWidth, windowHeight);
+	/// MAP DRAW ///
+	if (board && board.length){
+		for(var i = 0; i < board.length; i++) {
+			drawObj(5, i, i, 0);
+		}
+	}
+
+	if(!isPlaying(background_song)) {
+		background_song.currentTime = 0;
+		background_song.play();
+	}
+	if (allPlayers && allPlayers.length){
+		for(var i = 0; i < allPlayers.length; i++) {
+			if (!allPlayers[i])continue;
+			drawObj(allPlayers[i].type, allPlayers[i].y, allPlayers[i].x, allPlayers[i].dir);
+		}
+	}
+	fieldOfView();
+	textDraw();
+	move();
 
 
 }
@@ -260,47 +286,16 @@ function drawWords(words, x) {
   text(words, x, 80);
 
 }
-
-function initDraw(data){
-	if(user.getGroupName() != data[0].name)return;
-	clear();
-	fill(159, 163, 165);
-	rect(0, 0, windowWidth, windowHeight);
-	for(var i = 0; i < board.length; i++) {
-		drawObj(5, i, i, 0);
-
-	}
-	var it = 0, guy_it = 0;
-	for(var i = 0; i < data.length; i++) {
-		if(data[i].type == 1)it = i;
-		if(data[i].type == playerPosition.type)guy_it = i;
-	}
-
-	if(playerPosition.type != -1 && playerPosition.type != 1
-			&& distance(playerPosition.x, playerPosition.y, data[it].x, data[it].y) < 50) {
-				playerPosition.type = -1;
-				data[guy_it].type = -1;
-				socket.emit('died', playerPosition);
-			}
-	var backData = {
-		type : 5,
-		x : 0,
-
-	};
-	for(var i = 0; i < data.length; i++) {
-		drawObj(data[i].type, data[i].y, data[i].x, data[i].dir);
-	}
-	if (playerPosition.type!=1 && playerPosition.type!=-1){
-		image(shadow,center.x - center.y, 0 , center.y*2,center.y*2);
-		//image(shadow,center.x,center.y);
-		fill(0,0,0);
-		rect(0,0,center.x-center.y + 50,center.y*2);
-		rect(center.x-center.y+center.y*2 - 50,0,center.x-center.y+200,center.y*2);
-	}
+function initDraw(newData){
+	if(user.getGroupName() != newData[playerPosition.id].name)return;
+	allPlayers = newData;
+	playerPosition.locked = newData[playerPosition.id].locked;
+	playerPosition.type = newData[playerPosition.id].type;
 }
 function drawObj(type, i, j, direction) {
 	// console.log("Maluem");
 	if (type==0 || type == -1) return;
+	//console.log(type);
 	var toAdd = {
 		x : center.x-playerPosition.x,
 		y : center.y-playerPosition.y
@@ -355,21 +350,50 @@ function drawObj(type, i, j, direction) {
 }
 
 function keyReleased() {
-	if (keyCode === LEFT_ARROW || keyCode === RIGHT_ARROW){
-		velocity.x=0;
-	} else if (keyCode === UP_ARROW || keyCode === DOWN_ARROW){
-		velocity.y=0;
+	if (keyCode === LEFT_ARROW || keyCode === 65){
+		velocity.x+=player.speed;
+	} else if (keyCode === RIGHT_ARROW || keyCode === 68){
+		velocity.x-=player.speed;
+	} else if (keyCode === UP_ARROW || keyCode === 87){
+		velocity.y+=player.speed;
+	} else if (keyCode === DOWN_ARROW || keyCode === 83){
+		velocity.y-=player.speed;
 	}
-}
 
+}
+function touchStarted(){
+	if (!isFinite(playerPosition.x) || playerPosition.locked) return false;
+	console.log(mouseX,mouseY);
+	if (mouseX<windowWidth/3){
+		velocity.x-=player.speed;
+	}
+	if (mouseX>2*windowWidth/3){
+		velocity.x+=player.speed;
+	}
+	if (mouseY<windowHeight/3){
+		velocity.y-=player.speed;
+	}
+	if (mouseY>2*windowHeight/3){
+		velocity.y+=player.speed;
+	}
+	return false;
+}
+function touchEnded(){
+	velocity.x=0;
+	velocity.y=0;
+}
+function touchMoved(){
+	touchEnded();
+	touchStarted();
+}
 function keyPressed() {
-  if (keyCode === LEFT_ARROW) {
-    velocity.x += -15;
-  } else if (keyCode === RIGHT_ARROW) {
-    velocity.x += 15;
-  } else if (keyCode === UP_ARROW){
-		velocity.y += -15;
-	} else if (keyCode === DOWN_ARROW){
-		velocity.y += 15;
+  if (keyCode === LEFT_ARROW || keyCode === 65) {
+    velocity.x += -player.speed;
+  } else if (keyCode === RIGHT_ARROW || keyCode === 68) {
+    velocity.x += player.speed;
+  } else if (keyCode === UP_ARROW || keyCode === 87){
+		velocity.y += -player.speed;
+	} else if (keyCode === DOWN_ARROW || keyCode === 83){
+		velocity.y += player.speed;
 	}
 }
