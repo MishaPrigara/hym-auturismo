@@ -1,4 +1,4 @@
-[Teaser](https://youtu.be/wYnXzVKCy7c)
+[Teaser (outdated)](https://youtu.be/wYnXzVKCy7c)
 
 WANTED.
 
